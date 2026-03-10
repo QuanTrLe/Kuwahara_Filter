@@ -41,7 +41,8 @@ Shader "CustomRenderTexture/Kuwahara" {
             float _SizeAnimationSpeed, _NoiseFrequency;
 
             float luminance(float3 color) {
-                // numbers are the formula for converting to greyscale, hence dot to compare luminence
+                // numbers are the formula for converting to greyscale, hence dot to transform value to luminence
+                // remember the dot formula can also be jsut components of the vec multipled and summed
                 return dot(color, float3(0.299f, 0.587f, 0.114f));
             }
 
@@ -53,6 +54,8 @@ Shader "CustomRenderTexture/Kuwahara" {
             }
 
             // Returns avg color in .rgb, std in .a
+            // pair of x and y coordinate is to know where the quardrant is
+            // n is how many samples / pixels in the quadrant
             float4 SampleQuadrant(float2 uv, int x1, int x2, int y1, int y2, float n) {
                 float luminance_sum = 0.0f;
                 float luminance_sum2 = 0.0f;
@@ -63,16 +66,18 @@ Shader "CustomRenderTexture/Kuwahara" {
                 for (int x = x1; x <= x2; ++x) {
                     [loop]
                     for (int y = y1; y <= y2; ++y) {
+                        // _MainTex_TexelSize is size of texel of the texture, like 1 / resolution ish, easy way to get 0 to 1 uv range
+                        // so basically from uv center move to that cord 
                         float3 sample = tex2D(_MainTex, uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
                         float l = luminance(sample);
                         luminance_sum += l;
                         luminance_sum2 += l * l;
-                        col_sum += saturate(sample);
+                        col_sum += saturate(sample); // saturate clamps input between 0 - 1
                     }
                 }
 
                 float mean = luminance_sum / n;
-                float std = abs(luminance_sum2 / n - mean * mean);
+                float std = abs(luminance_sum2 / n - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2)
 
                 return float4(col_sum / n, std);
             }
