@@ -134,22 +134,25 @@ Shader "CustomRenderTexture/Kuwahara" {
 
                 // if there is no animation need then just calculate normally 
                 else {
-                    float windowSize = 2.0f * _KernelSize + 1;
-                    int quadrantSize = int(ceil(windowSize / 2.0f));
-                    int numSamples = quadrantSize * quadrantSize;
+                    float windowSize = 2.0f * _KernelSize + 1; // the area we're investigating / all quadrants combined 
+                    int quadrantSize = int(ceil(windowSize / 2.0f)); // kernel ~= quadrant 
+                    int numSamples = quadrantSize * quadrantSize; // how many samples / pixels we have in total
 
-
+                    // take variance of each quadrant and choose min
                     float4 q1 = SampleQuadrant(i.uv, -_KernelSize, 0, -_KernelSize, 0, numSamples);
                     float4 q2 = SampleQuadrant(i.uv, 0, _KernelSize, -_KernelSize, 0, numSamples);
                     float4 q3 = SampleQuadrant(i.uv, 0, _KernelSize, 0, _KernelSize, numSamples);
                     float4 q4 = SampleQuadrant(i.uv, -_KernelSize, 0, 0, _KernelSize, numSamples);
 
+                    // creates a mask where the quadrant w the lowest variance is a 1 and the rest is 0
+                    // bc we can also have cases where two quardrants have the same variance
                     float minstd = min(q1.a, min(q2.a, min(q3.a, q4.a)));
                     int4 q = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
     
-                    if (dot(q, 1) > 1)
+                    // if all 2 or more quardrants have the same variance then just choose all of them
+                    if (dot(q, 1) > 1) // dot of q here would be the amount of 1 in the mask
                         return saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb) / 4.0f, 1.0f));
-                    else
+                    else// else return the lowest quardrant's avg color using the mask we made
                         return saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
                 }
             }
