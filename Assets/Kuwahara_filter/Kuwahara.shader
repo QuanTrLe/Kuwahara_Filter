@@ -66,7 +66,7 @@ Shader "CustomRenderTexture/Kuwahara" {
                 for (int x = x1; x <= x2; ++x) {
                     [loop]
                     for (int y = y1; y <= y2; ++y) {
-                        // _MainTex_TexelSize is size of texel of the texture, like 1 / resolution ish, easy way to get 0 to 1 uv range
+                        // _MainTex_TexelSize is size of texel of the texture, easy way to get 0 to 1 uv range w/ the format Vector4(1 / width, 1 / height, width, height)
                         // so basically from uv center move to that cord 
                         float3 sample = tex2D(_MainTex, uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
                         float l = luminance(sample);
@@ -84,15 +84,22 @@ Shader "CustomRenderTexture/Kuwahara" {
 
             // The fragment program is where we do most of our work as to determine the color based on std deviations of the 4 quardrants
             float4 fp(v2f i) : SV_Target {
-                // if we need to animate the pass process then iterate through each kernel size
+                // if we need to animate the pass process then lerp between the filter result of the min kernel to the max kernel
                 if (_AnimateSize) {
+                    // basically an uint val for each pixel to help them have their own animation speed with kernelRange
                     uint seed = i.uv.x + _MainTex_TexelSize.z * i.uv.y + _MainTex_TexelSize.z * _MainTex_TexelSize.w;
-                    seed = i.uv.y * _MainTex_TexelSize.z * _MainTex_TexelSize.w;
+                    seed = i.uv.y * _MainTex_TexelSize.z * _MainTex_TexelSize.w; // z is width and w is height of screen
+
+                    // controlling animation and its speed
+                    // the [+ hash(seed) * _NoiseFrequency] basically adds a start offset time for the pixel, _NoiseFrequency is just for randomizing the seed more
                     float kernelRange = (sin(_Time.y * _SizeAnimationSpeed + hash(seed) * _NoiseFrequency) * 0.5f + 0.5f) * _KernelSize + _MinKernelSize;
                     int minKernelSize = floor(kernelRange);
                     int maxKernelSize = ceil(kernelRange);
-                    float t = frac(kernelRange);
 
+                    // to be used as interpolation value in the lerp
+                    float t = frac(kernelRange); // frac returns the fractional part of a number
+
+                    // filter results of min sized kernel
                     float windowSize = 2.0f * minKernelSize + 1;
                     int quadrantSize = int(ceil(windowSize / 2.0f));
                     int numSamples = quadrantSize * quadrantSize;
@@ -111,6 +118,7 @@ Shader "CustomRenderTexture/Kuwahara" {
                     else
                         result1 = saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
 
+                    // filter results of max sized kernel
                     windowSize = 2.0f * maxKernelSize + 1;
                     quadrantSize = int(ceil(windowSize / 2.0f));
                     numSamples = quadrantSize * quadrantSize;
@@ -129,6 +137,7 @@ Shader "CustomRenderTexture/Kuwahara" {
                     else
                         result2 = saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
 
+                    // lerp between the two for animation
                     return lerp(result1, result2, t);
                 } 
 

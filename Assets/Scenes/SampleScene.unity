@@ -443,11 +443,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   kuwaharaShader: {fileID: 4800000, guid: 9cef6cfe3b6af914aa724bad6ca4cde4, type: 3}
   kernelSize: 10
-  animateKernelSize: 1
+  animateKernelSize: 0
   minKernelSize: 1
   sizeAnimationSpeed: 0.1
   noiseFrequency: 0
-  animateKernelOrigin: 1
+  animateKernelOrigin: 0
   passes: 1
 --- !u!1 &2120425918
 GameObject:
