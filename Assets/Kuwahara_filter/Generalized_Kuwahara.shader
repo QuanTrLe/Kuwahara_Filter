@@ -87,8 +87,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 // if we need to animate the pass process then lerp between the filter result of the min kernel to the max kernel
                 if (_AnimateSize) {
                     // basically an uint val for each pixel to help them have their own animation speed with kernelRange
-                    uint seed = i.uv.x + _MainTex_TexelSize.z * i.uv.y + _MainTex_TexelSize.z * _MainTex_TexelSize.w;
-                    seed = i.uv.y * _MainTex_TexelSize.z * _MainTex_TexelSize.w; // z is width and w is height of screen
+                    uint seed = i.uv.y * _MainTex_TexelSize.z * _MainTex_TexelSize.w; // z is width and w is height of screen
 
                     // controlling animation and its speed
                     // the [+ hash(seed) * _NoiseFrequency] basically adds a start offset time for the pixel, _NoiseFrequency is just for randomizing the seed more

@@ -304,6 +304,7 @@ GameObject:
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
   - component: {fileID: 519420033}
+  - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -436,7 +437,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5dc92436ee466f74b808c7a912be45a8, type: 3}
   m_Name: 
@@ -447,6 +448,26 @@ MonoBehaviour:
   minKernelSize: 1
   sizeAnimationSpeed: 0.1
   noiseFrequency: 0
+  animateKernelOrigin: 0
+  passes: 1
+--- !u!114 &519420034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 294a18990ce53d541b3afa49b69f623f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  generalizedKuwaharaShader: {fileID: 4800000, guid: f75aae18bb0a73a45a8fe8f0df21db78, type: 3}
+  kernelSize: 10
+  animateKernelSize: 0
+  minKernelSize: 1
+  sizeAnimationSpeed: 1
+  noiseFrequency: 10
   animateKernelOrigin: 0
   passes: 1
 --- !u!1 &1055013056
