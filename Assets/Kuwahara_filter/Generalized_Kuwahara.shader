@@ -118,17 +118,12 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float4 q7 = SampleQuadrant(i.uv, _KernelSize, 7);
                 float4 q8 = SampleQuadrant(i.uv, _KernelSize, 8);
 
-                // creates a mask where the quadrant w the lowest variance is a 1 and the rest is 0
-                // bc we can also have cases where two quardrants have the same variance
-                // TODO: TAKE THE VARIANCE AND MAKE THE WEIGHTING FOR EACH, THEN CAP PLUS AVG THEM TOGETHER
-                float minstd = min(q1.a, min(q2.a, min(q3.a, q4.a)));
-                int4 q = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
+                // calculate the total weight and the combined color
+                float total_weight = q1.a + q2.a + q3.a + q4.a + q5.a + q6.a + q7.a + q8.a; 
+                float3 combined_color = q1.rgb * q1.a + q2.rgb * q2.a + q3.rgb * q3.a + q4.rgb * q4.a;
+                combined_color += q5.rgb * q5.a + q6.rgb * q6.a + q7.rgb * q7.a + q8.rgb * q8.a;
 
-                // if all 2 or more quardrants have the same variance then just choose all of them
-                if (dot(q, 1) > 1) // dot of q here would be the amount of 1 in the mask
-                    return saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb) / 4.0f, 1.0f));
-                else// else return the lowest quardrant's avg color using the mask we made
-                    return saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
+                return saturate(float4(combined_color / total_weight, 1.0f));
             }
             ENDCG
         }
