@@ -55,7 +55,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             // Returns avg color in .rgb, std in .a
             // pair of x and y coordinate is to know where the quardrant is
-            float4 SampleQuadrant(float2 uv, int kernelSize, int quardrantNum) {
+            float4 SampleQuadrant(float2 uv, int kernelSize, int quadrantNum) {
                 float luminance_sum = 0.0f;
                 float luminance_sum2 = 0.0f;
                 float3 col_sum = 0.0f;
@@ -67,6 +67,15 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                     [loop]
                     for (int y = -kernelSize; y <= kernelSize; ++y) {
                         // get the angle of the pixel and see if it's in the quardrant or not
+                        float pixelAngle = degrees(atan2(y, x));
+                        int pixelQuadrant = 0;
+                        pixelQuadrant = floor(fmod(pixelAngle + 22.5, 360.0) / 45.0) + 1; // get the quadrant number outright
+                        if (x == 0 && y == 0) { // in the case it's the center then it counts for all quadrants
+                            pixelQuadrant = quadrantNum;
+                        }
+                        if (pixelQuadrant != quadrantNum) {
+                            continue; // if not in the right quadrant just skip all ahead
+                        }
 
                         // get color and take it to sum normal way
                         // TODO: MAKE THIS GAUSSIAN WEIGHTING
