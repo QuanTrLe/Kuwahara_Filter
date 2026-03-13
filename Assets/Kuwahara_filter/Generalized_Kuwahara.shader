@@ -37,7 +37,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            int _KernelSize, _MinKernelSize, _AnimateSize, _AnimateOrigin;
+            int _KernelSize, _GaussianSigma, _MinKernelSize, _AnimateSize, _AnimateOrigin;
             float _SizeAnimationSpeed, _NoiseFrequency;
 
             float luminance(float3 color) {
@@ -83,8 +83,10 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                             continue; // if not in the right quadrant just skip all ahead
                         }
 
+                        // gaussian weight to take into account when adding the color / luminence
+                        float weight = (1.0 / (2.0 * UNITY_PI * _GaussianSigma * _GaussianSigma)) * exp(-(pixelDistance * pixelDistance) / (2.0 * _GaussianSigma * _GaussianSigma));
+
                         // get color and take it to sum normal way
-                        // TODO: MAKE THIS GAUSSIAN WEIGHTING
                         float3 sample = tex2D(_MainTex, uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
                         float l = luminance(sample);
                         luminance_sum += l;

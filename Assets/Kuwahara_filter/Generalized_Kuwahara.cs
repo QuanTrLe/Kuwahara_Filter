@@ -11,6 +11,9 @@ public class Generalized_Kuwahara : MonoBehaviour {
     [Range(1, 20)] // circular kernel radius to use in filter
     public int kernelSize = 1;
 
+    [Range(0.1f, 10.0f)]
+    public float gaussianSigma = 1.0f;
+
     public bool animateKernelSize = false;
 
     [Range(1, 20)] // starting kernel size when animating
@@ -37,6 +40,7 @@ public class Generalized_Kuwahara : MonoBehaviour {
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize);
+        kuwaharaMat.SetFloat("_GaussianSigma", gaussianSigma);
         kuwaharaMat.SetInt("_MinKernelSize", minKernelSize);
         kuwaharaMat.SetInt("_AnimateSize", animateKernelSize ? 1 : 0);
         kuwaharaMat.SetFloat("_SizeAnimationSpeed", sizeAnimationSpeed);
