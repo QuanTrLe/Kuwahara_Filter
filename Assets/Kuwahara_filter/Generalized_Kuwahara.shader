@@ -58,7 +58,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float luminance_sum = 0.0f;
                 float luminance_sum2 = 0.0f;
                 float3 col_sum = 0.0f;
-                int total_weight = 0;
+                float total_weight = 0;
 
                 // loop through all the rows and cols 
                 [loop]
@@ -91,7 +91,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                         float l = luminance(sample);
                         luminance_sum += l * gaussian_weight;
                         luminance_sum2 += l * l * gaussian_weight;
-                        col_sum += saturate(sample * gaussian_weight); // saturate clamps input between 0 - 1
+                        col_sum += sample * gaussian_weight; // saturate clamps input between 0 - 1
                         total_weight += gaussian_weight; // keep track of this for variance later
                     }
                 }

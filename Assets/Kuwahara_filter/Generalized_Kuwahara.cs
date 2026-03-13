@@ -11,8 +11,8 @@ public class Generalized_Kuwahara : MonoBehaviour {
     [Range(1, 20)] // circular kernel radius to use in filter
     public int kernelSize = 1;
 
-    [Range(0.1f, 10.0f)]
-    public float gaussianSigma = 1.0f;
+    [Range(3.0f, 20.0f)]
+    public float gaussianSigma = 7.0f;
 
     public bool animateKernelSize = false;
 
