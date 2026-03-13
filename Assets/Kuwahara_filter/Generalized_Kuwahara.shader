@@ -104,24 +104,28 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             // The fragment program is where we do most of our work as to determine the color based on std deviations of the 4 quardrants
             float4 fp(v2f i) : SV_Target {
-                float windowSize = 2.0f * _KernelSize + 1; // the area we're investigating / all quadrants combined 
-                int quadrantSize = int(ceil(windowSize / 2.0f)); // kernel ~= quadrant 
-                int numSamples = quadrantSize * quadrantSize; // how many samples / pixels we have in total
-
                 // take variance of each quadrant and choose min
                 float4 q1 = SampleQuadrant(i.uv, _KernelSize, 1);
+                float4 q1_weight = 1 / (1 + q1.a);
                 float4 q2 = SampleQuadrant(i.uv, _KernelSize, 2);
+                float4 q2_weight = 1 / (1 + q2.a);
                 float4 q3 = SampleQuadrant(i.uv, _KernelSize, 3);
+                float4 q3_weight = 1 / (1 + q3.a);
                 float4 q4 = SampleQuadrant(i.uv, _KernelSize, 4);
+                float4 q4_weight = 1 / (1 + q4.a);
                 float4 q5 = SampleQuadrant(i.uv, _KernelSize, 5);
+                float4 q5_weight = 1 / (1 + q5.a);
                 float4 q6 = SampleQuadrant(i.uv, _KernelSize, 6);
+                float4 q6_weight = 1 / (1 + q6.a);
                 float4 q7 = SampleQuadrant(i.uv, _KernelSize, 7);
+                float4 q7_weight = 1 / (1 + q7.a);
                 float4 q8 = SampleQuadrant(i.uv, _KernelSize, 8);
+                float4 q8_weight = 1 / (1 + q8.a);
 
                 // calculate the total weight and the combined color
-                float total_weight = q1.a + q2.a + q3.a + q4.a + q5.a + q6.a + q7.a + q8.a; 
-                float3 combined_color = q1.rgb * q1.a + q2.rgb * q2.a + q3.rgb * q3.a + q4.rgb * q4.a;
-                combined_color += q5.rgb * q5.a + q6.rgb * q6.a + q7.rgb * q7.a + q8.rgb * q8.a;
+                float total_weight = q1_weight + q2_weight + q3_weight + q4_weight + q5_weight + q6_weight + q7_weight + q8_weight;
+                float3 combined_color = q1.rgb * q1_weight + q2.rgb * q2_weight + q3.rgb * q3_weight + q4.rgb * q4_weight;
+                combined_color += q5.rgb * q5_weight + q6.rgb * q6_weight + q7.rgb * q7_weight + q8.rgb * q8_weight;
 
                 return saturate(float4(combined_color / total_weight, 1.0f));
             }
