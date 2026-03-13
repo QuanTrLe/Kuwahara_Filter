@@ -55,114 +55,63 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             // Returns avg color in .rgb, std in .a
             // pair of x and y coordinate is to know where the quardrant is
-            // n is how many samples / pixels in the quadrant
-            float4 SampleQuadrant(float2 uv, int x1, int x2, int y1, int y2, float n) {
+            float4 SampleQuadrant(float2 uv, int kernelSize, int quardrantNum) {
                 float luminance_sum = 0.0f;
                 float luminance_sum2 = 0.0f;
                 float3 col_sum = 0.0f;
+                int samples_taken = 0;
 
                 // loop through all the rows and cols 
                 [loop]
-                for (int x = x1; x <= x2; ++x) {
+                for (int x = -kernelSize; x <= kernelSize; ++x) {
                     [loop]
-                    for (int y = y1; y <= y2; ++y) {
-                        // _MainTex_TexelSize is size of texel of the texture, easy way to get 0 to 1 uv range w/ the format Vector4(1 / width, 1 / height, width, height)
-                        // so basically from uv center move to that cord 
+                    for (int y = -kernelSize; y <= kernelSize; ++y) {
+                        // get the angle of the pixel and see if it's in the quardrant or not
+
+                        // get color and take it to sum normal way
+                        // TODO: MAKE THIS GAUSSIAN WEIGHTING
                         float3 sample = tex2D(_MainTex, uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
                         float l = luminance(sample);
                         luminance_sum += l;
                         luminance_sum2 += l * l;
                         col_sum += saturate(sample); // saturate clamps input between 0 - 1
+                        samples_taken++;
                     }
                 }
 
-                float mean = luminance_sum / n;
-                float std = abs(luminance_sum2 / n - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2)
+                float mean = luminance_sum / samples_taken;
+                float std = abs(luminance_sum2 / samples_taken - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2)
 
-                return float4(col_sum / n, std);
+                return float4(col_sum / samples_taken, std);
             }
 
             // The fragment program is where we do most of our work as to determine the color based on std deviations of the 4 quardrants
             float4 fp(v2f i) : SV_Target {
-                // if we need to animate the pass process then lerp between the filter result of the min kernel to the max kernel
-                if (_AnimateSize) {
-                    // basically an uint val for each pixel to help them have their own animation speed with kernelRange
-                    uint seed = i.uv.y * _MainTex_TexelSize.z * _MainTex_TexelSize.w; // z is width and w is height of screen
+                float windowSize = 2.0f * _KernelSize + 1; // the area we're investigating / all quadrants combined 
+                int quadrantSize = int(ceil(windowSize / 2.0f)); // kernel ~= quadrant 
+                int numSamples = quadrantSize * quadrantSize; // how many samples / pixels we have in total
 
-                    // controlling animation and its speed
-                    // the [+ hash(seed) * _NoiseFrequency] basically adds a start offset time for the pixel, _NoiseFrequency is just for randomizing the seed more
-                    float kernelRange = (sin(_Time.y * _SizeAnimationSpeed + hash(seed) * _NoiseFrequency) * 0.5f + 0.5f) * _KernelSize + _MinKernelSize;
-                    int minKernelSize = floor(kernelRange);
-                    int maxKernelSize = ceil(kernelRange);
+                // take variance of each quadrant and choose min
+                float4 q1 = SampleQuadrant(i.uv, _KernelSize, 1);
+                float4 q2 = SampleQuadrant(i.uv, _KernelSize, 2);
+                float4 q3 = SampleQuadrant(i.uv, _KernelSize, 3);
+                float4 q4 = SampleQuadrant(i.uv, _KernelSize, 4);
+                float4 q5 = SampleQuadrant(i.uv, _KernelSize, 5);
+                float4 q6 = SampleQuadrant(i.uv, _KernelSize, 6);
+                float4 q7 = SampleQuadrant(i.uv, _KernelSize, 7);
+                float4 q8 = SampleQuadrant(i.uv, _KernelSize, 8);
 
-                    // to be used as interpolation value in the lerp
-                    float t = frac(kernelRange); // frac returns the fractional part of a number
+                // creates a mask where the quadrant w the lowest variance is a 1 and the rest is 0
+                // bc we can also have cases where two quardrants have the same variance
+                // TODO: TAKE THE VARIANCE AND MAKE THE WEIGHTING FOR EACH, THEN CAP PLUS AVG THEM TOGETHER
+                float minstd = min(q1.a, min(q2.a, min(q3.a, q4.a)));
+                int4 q = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
 
-                    // filter results of min sized kernel
-                    float windowSize = 2.0f * minKernelSize + 1;
-                    int quadrantSize = int(ceil(windowSize / 2.0f));
-                    int numSamples = quadrantSize * quadrantSize;
-
-                    float4 q1 = SampleQuadrant(i.uv, -minKernelSize, 0, -minKernelSize, 0, numSamples);
-                    float4 q2 = SampleQuadrant(i.uv, 0, minKernelSize, -minKernelSize, 0, numSamples);
-                    float4 q3 = SampleQuadrant(i.uv, 0, minKernelSize, 0, minKernelSize, numSamples);
-                    float4 q4 = SampleQuadrant(i.uv, -minKernelSize, 0, 0, minKernelSize, numSamples);
-
-                    float minstd = min(q1.a, min(q2.a, min(q3.a, q4.a)));
-                    int4 q = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
-    
-                    float4 result1 = 0;
-                    if (dot(q, 1) > 1)
-                        result1 = saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb) / 4.0f, 1.0f));
-                    else
-                        result1 = saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
-
-                    // filter results of max sized kernel
-                    windowSize = 2.0f * maxKernelSize + 1;
-                    quadrantSize = int(ceil(windowSize / 2.0f));
-                    numSamples = quadrantSize * quadrantSize;
-
-                    q1 = SampleQuadrant(i.uv, -maxKernelSize, 0, -maxKernelSize, 0, numSamples);
-                    q2 = SampleQuadrant(i.uv, 0, maxKernelSize, -maxKernelSize, 0, numSamples);
-                    q3 = SampleQuadrant(i.uv, 0, maxKernelSize, 0, maxKernelSize, numSamples);
-                    q4 = SampleQuadrant(i.uv, -maxKernelSize, 0, 0, maxKernelSize, numSamples);
-
-                    minstd = min(q1.a, min(q2.a, min(q3.a, q4.a)));
-                    q = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
-    
-                    float4 result2 = 0;
-                    if (dot(q, 1) > 1)
-                        result2 = saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb) / 4.0f, 1.0f));
-                    else
-                        result2 = saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
-
-                    // lerp between the two for animation
-                    return lerp(result1, result2, t);
-                } 
-
-                // if there is no animation need then just calculate normally 
-                else {
-                    float windowSize = 2.0f * _KernelSize + 1; // the area we're investigating / all quadrants combined 
-                    int quadrantSize = int(ceil(windowSize / 2.0f)); // kernel ~= quadrant 
-                    int numSamples = quadrantSize * quadrantSize; // how many samples / pixels we have in total
-
-                    // take variance of each quadrant and choose min
-                    float4 q1 = SampleQuadrant(i.uv, -_KernelSize, 0, -_KernelSize, 0, numSamples);
-                    float4 q2 = SampleQuadrant(i.uv, 0, _KernelSize, -_KernelSize, 0, numSamples);
-                    float4 q3 = SampleQuadrant(i.uv, 0, _KernelSize, 0, _KernelSize, numSamples);
-                    float4 q4 = SampleQuadrant(i.uv, -_KernelSize, 0, 0, _KernelSize, numSamples);
-
-                    // creates a mask where the quadrant w the lowest variance is a 1 and the rest is 0
-                    // bc we can also have cases where two quardrants have the same variance
-                    float minstd = min(q1.a, min(q2.a, min(q3.a, q4.a)));
-                    int4 q = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
-    
-                    // if all 2 or more quardrants have the same variance then just choose all of them
-                    if (dot(q, 1) > 1) // dot of q here would be the amount of 1 in the mask
-                        return saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb) / 4.0f, 1.0f));
-                    else// else return the lowest quardrant's avg color using the mask we made
-                        return saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
-                }
+                // if all 2 or more quardrants have the same variance then just choose all of them
+                if (dot(q, 1) > 1) // dot of q here would be the amount of 1 in the mask
+                    return saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb) / 4.0f, 1.0f));
+                else// else return the lowest quardrant's avg color using the mask we made
+                    return saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w, 1.0f));
             }
             ENDCG
         }

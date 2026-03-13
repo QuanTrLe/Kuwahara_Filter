@@ -8,7 +8,7 @@ using UnityEngine;
 public class Generalized_Kuwahara : MonoBehaviour {
     public Shader generalizedKuwaharaShader;
     
-    [Range(1, 20)] // kernel size to use in filter, if animated then this will be the stopping poine
+    [Range(1, 20)] // circular kernel radius to use in filter
     public int kernelSize = 1;
 
     public bool animateKernelSize = false;
