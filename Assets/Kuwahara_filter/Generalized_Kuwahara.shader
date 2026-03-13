@@ -66,6 +66,12 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 for (int x = -kernelSize; x <= kernelSize; ++x) {
                     [loop]
                     for (int y = -kernelSize; y <= kernelSize; ++y) {
+                        // check if it's even within the circular kernel
+                        float pixelDistance = distance(float2(0, 0), float2(x, y));
+                        if (pixelDistance > kernelSize) {
+                            continue; // pixel outside circular kernel
+                        }
+
                         // get the angle of the pixel and see if it's in the quardrant or not
                         float pixelAngle = degrees(atan2(y, x));
                         int pixelQuadrant = 0;
