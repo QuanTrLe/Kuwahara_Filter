@@ -58,7 +58,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float luminance_sum = 0.0f;
                 float luminance_sum2 = 0.0f;
                 float3 col_sum = 0.0f;
-                int samples_taken = 0;
+                int total_weight = 0;
 
                 // loop through all the rows and cols 
                 [loop]
@@ -84,22 +84,22 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                         }
 
                         // gaussian weight to take into account when adding the color / luminence
-                        float weight = (1.0 / (2.0 * UNITY_PI * _GaussianSigma * _GaussianSigma)) * exp(-(pixelDistance * pixelDistance) / (2.0 * _GaussianSigma * _GaussianSigma));
+                        float gaussian_weight = (1.0 / (2.0 * UNITY_PI * _GaussianSigma * _GaussianSigma)) * exp(-(pixelDistance * pixelDistance) / (2.0 * _GaussianSigma * _GaussianSigma));
 
                         // get color and take it to sum normal way
                         float3 sample = tex2D(_MainTex, uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
                         float l = luminance(sample);
-                        luminance_sum += l;
-                        luminance_sum2 += l * l;
-                        col_sum += saturate(sample); // saturate clamps input between 0 - 1
-                        samples_taken++;
+                        luminance_sum += l * gaussian_weight;
+                        luminance_sum2 += l * l * gaussian_weight;
+                        col_sum += saturate(sample * gaussian_weight); // saturate clamps input between 0 - 1
+                        total_weight += gaussian_weight; // keep track of this for variance later
                     }
                 }
 
-                float mean = luminance_sum / samples_taken;
-                float std = abs(luminance_sum2 / samples_taken - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2)
+                float mean = luminance_sum / total_weight;
+                float std = abs(luminance_sum2 / total_weight - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2)
 
-                return float4(col_sum / samples_taken, std);
+                return float4(col_sum / total_weight, std);
             }
 
             // The fragment program is where we do most of our work as to determine the color based on std deviations of the 4 quardrants
