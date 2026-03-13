@@ -464,7 +464,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   generalizedKuwaharaShader: {fileID: 4800000, guid: f75aae18bb0a73a45a8fe8f0df21db78, type: 3}
   kernelSize: 10
-  gaussianSigma: 1
+  gaussianSigma: 0.1
   animateKernelSize: 1
   minKernelSize: 1
   sizeAnimationSpeed: 1

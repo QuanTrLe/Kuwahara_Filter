@@ -37,8 +37,8 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            int _KernelSize, _GaussianSigma, _MinKernelSize, _AnimateSize, _AnimateOrigin;
-            float _SizeAnimationSpeed, _NoiseFrequency;
+            int _KernelSize, _MinKernelSize, _AnimateSize, _AnimateOrigin;
+            float _GaussianSigma, _SizeAnimationSpeed, _NoiseFrequency;
 
             float luminance(float3 color) {
                 // numbers are the formula for converting to greyscale, hence dot to transform value to luminence
