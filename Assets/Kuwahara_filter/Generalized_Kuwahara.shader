@@ -53,8 +53,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 return float(n & uint(0x7fffffffU)) / float(0x7fffffff);
             }
 
-            // Returns avg color in .rgb, std in .a
-            // pair of x and y coordinate is to know where the quardrant is
+            // Returns avg color in .rgb, variance in .a
             float4 SampleQuadrant(float2 uv, int kernelSize, int quadrantNum) {
                 float luminance_sum = 0.0f;
                 float luminance_sum2 = 0.0f;
@@ -74,6 +73,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
                         // get the angle of the pixel and see if it's in the quardrant or not
                         float pixelAngle = degrees(atan2(y, x));
+                        pixelAngle = fmod(pixelAngle + 360.0, 360.0); // since it returns -180 to 180
                         int pixelQuadrant = 0;
                         pixelQuadrant = floor(fmod(pixelAngle + 22.5, 360.0) / 45.0) + 1; // get the quadrant number outright
                         if (x == 0 && y == 0) { // in the case it's the center then it counts for all quadrants
