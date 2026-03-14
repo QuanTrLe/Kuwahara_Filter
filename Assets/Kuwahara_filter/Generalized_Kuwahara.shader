@@ -42,7 +42,6 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             float luminance(float3 color) {
                 // numbers are the formula for converting to greyscale, hence dot to transform value to luminence
-                // remember the dot formula can also be jsut components of the vec multipled and summed
                 return dot(color, float3(0.299f, 0.587f, 0.114f));
             }
 
@@ -59,6 +58,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float luminance_sum2 = 0.0f;
                 float3 col_sum = 0.0f;
                 float total_weight = 0;
+                int total_samples = 0;
 
                 // loop through all the rows and cols 
                 [loop]
@@ -106,28 +106,28 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
             float4 fp(v2f i) : SV_Target {
                 // take variance of each quadrant and choose min
                 float4 q1 = SampleQuadrant(i.uv, _KernelSize, 1);
-                float4 q1_weight = 1 / (1 + q1.a);
+                float q1_weight = 1.0 / (1.0 + q1.a);
                 float4 q2 = SampleQuadrant(i.uv, _KernelSize, 2);
-                float4 q2_weight = 1 / (1 + q2.a);
+                float q2_weight = 1.0 / (1.0 + q2.a);
                 float4 q3 = SampleQuadrant(i.uv, _KernelSize, 3);
-                float4 q3_weight = 1 / (1 + q3.a);
+                float q3_weight = 1.0 / (1.0 + q3.a);
                 float4 q4 = SampleQuadrant(i.uv, _KernelSize, 4);
-                float4 q4_weight = 1 / (1 + q4.a);
+                float q4_weight = 1.0 / (1.0 + q4.a);
                 float4 q5 = SampleQuadrant(i.uv, _KernelSize, 5);
-                float4 q5_weight = 1 / (1 + q5.a);
+                float q5_weight = 1.0 / (1.0 + q5.a);
                 float4 q6 = SampleQuadrant(i.uv, _KernelSize, 6);
-                float4 q6_weight = 1 / (1 + q6.a);
+                float q6_weight = 1.0 / (1.0 + q6.a);
                 float4 q7 = SampleQuadrant(i.uv, _KernelSize, 7);
-                float4 q7_weight = 1 / (1 + q7.a);
+                float q7_weight = 1.0 / (1.0 + q7.a);
                 float4 q8 = SampleQuadrant(i.uv, _KernelSize, 8);
-                float4 q8_weight = 1 / (1 + q8.a);
+                float q8_weight = 1.0 / (1.0 + q8.a);
 
                 // calculate the total weight and the combined color
                 float total_weight = q1_weight + q2_weight + q3_weight + q4_weight + q5_weight + q6_weight + q7_weight + q8_weight;
                 float3 combined_color = q1.rgb * q1_weight + q2.rgb * q2_weight + q3.rgb * q3_weight + q4.rgb * q4_weight;
                 combined_color += q5.rgb * q5_weight + q6.rgb * q6_weight + q7.rgb * q7_weight + q8.rgb * q8_weight;
 
-                return saturate(float4(combined_color / total_weight, 1.0f));
+                return saturate(float4(combined_color.r / total_weight, combined_color.g / toal_weight, combined_color.b / total_weight, 1.0f));
             }
             ENDCG
         }
