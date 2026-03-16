@@ -437,7 +437,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5dc92436ee466f74b808c7a912be45a8, type: 3}
   m_Name: 
@@ -457,14 +457,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 294a18990ce53d541b3afa49b69f623f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   generalizedKuwaharaShader: {fileID: 4800000, guid: f75aae18bb0a73a45a8fe8f0df21db78, type: 3}
   kernelSize: 10
-  gaussianSigma: 1.5
+  gaussianSigma: 5
   animateKernelSize: 0
   minKernelSize: 1
   sizeAnimationSpeed: 1

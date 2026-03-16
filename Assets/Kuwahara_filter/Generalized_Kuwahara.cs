@@ -12,7 +12,7 @@ public class Generalized_Kuwahara : MonoBehaviour {
     public int kernelSize = 1;
 
     [Range(0.1f, 10.0f)]
-    public float gaussianSigma = 0.1f;
+    public float gaussianSigma = 5.0f;
 
     public bool animateKernelSize = false;
 
