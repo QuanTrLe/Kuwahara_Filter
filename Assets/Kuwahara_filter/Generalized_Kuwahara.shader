@@ -37,7 +37,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            int _KernelSize, _MinKernelSize, _AnimateSize, _AnimateOrigin, _QuadrantWeightMultiplier;
+            int _KernelSize, _MinKernelSize, _AnimateSize, _AnimateOrigin, _QuadrantWeightPower;
             float _GaussianSigma, _SizeAnimationSpeed, _NoiseFrequency;
 
             float luminance(float3 color) {
@@ -106,21 +106,21 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
             float4 fp(v2f i) : SV_Target {
                 // take variance of each quadrant and choose min
                 float4 q1 = SampleQuadrant(i.uv, _KernelSize, 1);
-                float q1_weight = 1.0 / (1.0 + sqrt(q1.a) * _QuadrantWeightMultiplier);
+                float q1_weight = 1.0 / pow(0.0001 + sqrt(q1.a), _QuadrantWeightPower);
                 float4 q2 = SampleQuadrant(i.uv, _KernelSize, 2);
-                float q2_weight = 1.0 / (1.0 + sqrt(q2.a) * _QuadrantWeightMultiplier);
+                float q2_weight = 1.0 / pow(0.0001 + sqrt(q2.a), _QuadrantWeightPower);
                 float4 q3 = SampleQuadrant(i.uv, _KernelSize, 3);
-                float q3_weight = 1.0 / (1.0 + sqrt(q3.a) * _QuadrantWeightMultiplier);
+                float q3_weight = 1.0 / pow(0.0001 + sqrt(q3.a), _QuadrantWeightPower);
                 float4 q4 = SampleQuadrant(i.uv, _KernelSize, 4);
-                float q4_weight = 1.0 / (1.0 + sqrt(q4.a) * _QuadrantWeightMultiplier);
+                float q4_weight = 1.0 / pow(0.0001 + sqrt(q4.a), _QuadrantWeightPower);
                 float4 q5 = SampleQuadrant(i.uv, _KernelSize, 5);
-                float q5_weight = 1.0 / (1.0 + sqrt(q5.a) * _QuadrantWeightMultiplier);
+                float q5_weight = 1.0 / pow(0.0001 + sqrt(q5.a), _QuadrantWeightPower);
                 float4 q6 = SampleQuadrant(i.uv, _KernelSize, 6);
-                float q6_weight = 1.0 / (1.0 + sqrt(q6.a) * _QuadrantWeightMultiplier);
+                float q6_weight = 1.0 / pow(0.0001 + sqrt(q6.a), _QuadrantWeightPower);
                 float4 q7 = SampleQuadrant(i.uv, _KernelSize, 7);
-                float q7_weight = 1.0 / (1.0 + sqrt(q7.a) * _QuadrantWeightMultiplier);
+                float q7_weight = 1.0 / pow(0.0001 + sqrt(q7.a), _QuadrantWeightPower);
                 float4 q8 = SampleQuadrant(i.uv, _KernelSize, 8);
-                float q8_weight = 1.0 / (1.0 + sqrt(q8.a) * _QuadrantWeightMultiplier);
+                float q8_weight = 1.0 / pow(0.0001 + sqrt(q8.a), _QuadrantWeightPower);
 
                 // calculate the total weight and the combined color
                 float total_weight = q1_weight + q2_weight + q3_weight + q4_weight + q5_weight + q6_weight + q7_weight + q8_weight;

@@ -14,8 +14,8 @@ public class Generalized_Kuwahara : MonoBehaviour {
     [Range(0.1f, 10.0f)] // technically std dev in gaussian weight
     public float gaussianSigma = 5.0f;
 
-    [Range(1, 1000)] // multiplication for each quadrant's weighting in the final color 
-    public int quadrantWeightMultiplier = 10;
+    [Range(1, 10)] // multiplication for each quadrant's weighting in the final color 
+    public int quadrantWeightPower = 6;
 
     public bool animateKernelSize = false;
 
@@ -44,7 +44,7 @@ public class Generalized_Kuwahara : MonoBehaviour {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize);
         kuwaharaMat.SetFloat("_GaussianSigma", gaussianSigma);
-        kuwaharaMat.SetInt("_QuadrantWeightMultiplier", quadrantWeightMultiplier);
+        kuwaharaMat.SetInt("_QuadrantWeightPower", quadrantWeightPower);
         kuwaharaMat.SetInt("_MinKernelSize", minKernelSize);
         kuwaharaMat.SetInt("_AnimateSize", animateKernelSize ? 1 : 0);
         kuwaharaMat.SetFloat("_SizeAnimationSpeed", sizeAnimationSpeed);
