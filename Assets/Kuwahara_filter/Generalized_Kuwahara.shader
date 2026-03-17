@@ -44,7 +44,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
             int _KernelSize, _QuadrantWeightPower;
-            float _GaussianSigma,;
+            float _GaussianSigma;
 
             float luminance(float3 color) {
                 // numbers are the formula for converting to greyscale, hence dot to transform value to luminence
@@ -94,10 +94,10 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                         // get the angle of the pixel and see if it's in the quardrant or not
                         float pixel_angle = degrees(atan2(y, x));
                         pixel_angle = fmod(pixel_angle + 360.0, 360.0); // since it returns -180 to 180
-                        int quadrant_num = 0;
-                        quadrant_num = floor(fmod(pixel_angle + 22.5, 360.0) / 45.0); // get the quadrant number to array index, 0-7
+                        int quadrant_num = floor(fmod(pixel_angle + 22.5, 360.0) / 45.0); // get the quadrant number to array index, 0-7
 
                         // calc all the necessary data
+                        [loop]
                         for (int i = 0; i < 8; i++) {
                             if ((x == 0 && y == 0) || i == quadrant_num) { // if in center or in right quadrant
                                 luminance_sum[i] += l * gaussian_weight;
@@ -110,10 +110,11 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 }
 
                 // calculate the avg color and variance of each quadrant
+                [loop]
                 for(int i = 0; i < 8; i++) {
                     float mean = luminance_sum[i] / total_weight[i];
                     variance[i] = abs(luminance_sum2[i] / total_weight[i] - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2) 
-                    quadrant_colors[i] = float4(col_sum[i] / total_weight[i], variance[i]); 
+                    quadrant_colors[i] = float4(col_sum[i] / total_weight[i], variance[i]);
                 }
                 
                 outData.colors = quadrant_colors;
@@ -128,6 +129,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float3 combined_color = 0;
                 float total_weight = 0;
 
+                [loop]
                 for (int i = 0; i < 8; i++) {
                     float quadrant_weighting = 1.0 / (pow(0.0001 + sqrt(quardrant_data.colors[i].a), _QuadrantWeightPower));
                     float3 quadrant_color = quardrant_data.colors[i].rgb;
