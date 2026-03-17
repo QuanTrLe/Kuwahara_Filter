@@ -466,11 +466,6 @@ MonoBehaviour:
   kernelSize: 10
   gaussianSigma: 8
   quadrantWeightPower: 6
-  animateKernelSize: 0
-  minKernelSize: 1
-  sizeAnimationSpeed: 1
-  noiseFrequency: 10
-  animateKernelOrigin: 0
   passes: 1
 --- !u!1 &1055013056
 GameObject:
