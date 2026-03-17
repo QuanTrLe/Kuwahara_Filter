@@ -43,8 +43,8 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            int _KernelSize, _MinKernelSize, _AnimateSize, _AnimateOrigin, _QuadrantWeightPower;
-            float _GaussianSigma, _SizeAnimationSpeed, _NoiseFrequency;
+            int _KernelSize, _QuadrantWeightPower;
+            float _GaussianSigma,;
 
             float luminance(float3 color) {
                 // numbers are the formula for converting to greyscale, hence dot to transform value to luminence
@@ -96,22 +96,15 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                         pixel_angle = fmod(pixel_angle + 360.0, 360.0); // since it returns -180 to 180
                         int quadrant_num = 0;
                         quadrant_num = floor(fmod(pixel_angle + 22.5, 360.0) / 45.0); // get the quadrant number to array index, 0-7
-                        
-                        // in the case it's the center then it counts for all quadrants
-                        if (x == 0 && y == 0) {
-                            for(int i = 0; i < 8; i++) {
+
+                        // calc all the necessary data
+                        for (int i = 0; i < 8; i++) {
+                            if ((x == 0 && y == 0) || i == quadrant_num) { // if in center or in right quadrant
                                 luminance_sum[i] += l * gaussian_weight;
                                 luminance_sum2[i] += l * l * gaussian_weight;
                                 col_sum[i] += sample * gaussian_weight;
                                 total_weight[i] += gaussian_weight; // keep track of this for variance later
                             }
-                        }
-                        else {
-                            // else it just belongs to one quadrant 
-                            luminance_sum[quadrant_num] += l * gaussian_weight;
-                            luminance_sum2[quadrant_num] += l * l * gaussian_weight;
-                            col_sum[quadrant_num] += sample * gaussian_weight;
-                            total_weight[quadrant_num] += gaussian_weight; // keep track of this for variance later
                         }
                     }
                 }
@@ -120,9 +113,10 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 for(int i = 0; i < 8; i++) {
                     float mean = luminance_sum[i] / total_weight[i];
                     variance[i] = abs(luminance_sum2[i] / total_weight[i] - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2) 
-                    outData.colors[i] = float4(col_sum[i] / total_weight[i], variance[i]); 
+                    quadrant_colors[i] = float4(col_sum[i] / total_weight[i], variance[i]); 
                 }
-
+                
+                outData.colors = quadrant_colors;
                 return outData;
             }
 
