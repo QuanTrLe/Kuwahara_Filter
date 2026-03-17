@@ -10,8 +10,6 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
         Pass {
             CGPROGRAM
-// Upgrade NOTE: excluded shader from DX11 because it uses wrong array syntax (type[size] name)
-#pragma exclude_renderers d3d11
             #pragma vertex vp
             #pragma fragment fp
 
