@@ -10,6 +10,8 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
         Pass {
             CGPROGRAM
+// Upgrade NOTE: excluded shader from DX11 because it uses wrong array syntax (type[size] name)
+#pragma exclude_renderers d3d11
             #pragma vertex vp
             #pragma fragment fp
 
@@ -25,6 +27,10 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
             struct v2f { 
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+            };
+
+            struct QuadrantData {
+                float4 colors[8];
             };
 
             // Vertex program that just sets the ClipPos of the vertex and the uv data of the struct
@@ -53,12 +59,20 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
             }
 
             // Returns avg color in .rgb, variance in .a
-            float4 SampleQuadrant(float2 uv, int kernelSize, int quadrantNum) {
-                float luminance_sum = 0.0f;
-                float luminance_sum2 = 0.0f;
-                float3 col_sum = 0.0f;
-                float total_weight = 0;
-                int total_samples = 0;
+            QuadrantData SampleQuadrant(float2 uv, int kernelSize) {
+                QuadrantData outData;
+
+                // constants
+                float sigma_2 = _GaussianSigma * _GaussianSigma;
+                float gaussian_weight_scalar = (1.0 / (2.0 * UNITY_PI *sigma_2));
+
+                // each quadrant's data
+                float luminance_sum[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                float luminance_sum2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                float3 col_sum[8] = {(float3)0, (float3)0, (float3)0, (float3)0, (float3)0, (float3)0, (float3)0, (float3)0};
+                float total_weight[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                float variance[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                float4 quadrant_colors[8] = {(float4)0, (float4)0, (float4)0, (float4)0, (float4)0, (float4)0, (float4)0, (float4)0};
 
                 // loop through all the rows and cols 
                 [loop]
@@ -71,76 +85,64 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                             continue; // pixel outside circular kernel
                         }
 
-                        // get the angle of the pixel and see if it's in the quardrant or not
-                        float pixelAngle = degrees(atan2(y, x));
-                        pixelAngle = fmod(pixelAngle + 360.0, 360.0); // since it returns -180 to 180
-                        int pixelQuadrant = 0;
-                        pixelQuadrant = floor(fmod(pixelAngle + 22.5, 360.0) / 45.0) + 1; // get the quadrant number outright
-                        if (x == 0 && y == 0) { // in the case it's the center then it counts for all quadrants
-                            pixelQuadrant = quadrantNum;
-                        }
-                        if (pixelQuadrant != quadrantNum) {
-                            continue; // if not in the right quadrant just skip all ahead
-                        }
-
-                        // gaussian weight to take into account when adding the color / luminence
-                        // (1 / 2 * PI * sigma^2) * Euler ^ [-(x^2 + y^2) / (2 * sigma^2)]
-                        float gaussian_weight = (1.0 / (2.0 * UNITY_PI * _GaussianSigma * _GaussianSigma)) * exp(-(x * x + y * y) / (2.0 * _GaussianSigma * _GaussianSigma));
                         // get color and take it to sum normal way
                         float3 sample = tex2D(_MainTex, uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
                         float l = luminance(sample);
-                        luminance_sum += l * gaussian_weight;
-                        luminance_sum2 += l * l * gaussian_weight;
-                        col_sum += sample * gaussian_weight;
-                        total_weight += gaussian_weight; // keep track of this for variance later
+                        // gaussian weight: (1 / 2 * PI * sigma^2) * Euler ^ [-(x^2 + y^2) / (2 * sigma^2)]
+                        float gaussian_weight = gaussian_weight_scalar * exp(-(x * x + y * y) / (2.0 * sigma_2));
+
+                        // get the angle of the pixel and see if it's in the quardrant or not
+                        float pixel_angle = degrees(atan2(y, x));
+                        pixel_angle = fmod(pixel_angle + 360.0, 360.0); // since it returns -180 to 180
+                        int quadrant_num = 0;
+                        quadrant_num = floor(fmod(pixel_angle + 22.5, 360.0) / 45.0); // get the quadrant number to array index, 0-7
+                        
+                        // in the case it's the center then it counts for all quadrants
+                        if (x == 0 && y == 0) {
+                            for(int i = 0; i < 8; i++) {
+                                luminance_sum[i] += l * gaussian_weight;
+                                luminance_sum2[i] += l * l * gaussian_weight;
+                                col_sum[i] += sample * gaussian_weight;
+                                total_weight[i] += gaussian_weight; // keep track of this for variance later
+                            }
+                        }
+                        else {
+                            // else it just belongs to one quadrant 
+                            luminance_sum[quadrant_num] += l * gaussian_weight;
+                            luminance_sum2[quadrant_num] += l * l * gaussian_weight;
+                            col_sum[quadrant_num] += sample * gaussian_weight;
+                            total_weight[quadrant_num] += gaussian_weight; // keep track of this for variance later
+                        }
                     }
                 }
 
-                float mean = luminance_sum / total_weight;
-                float std = abs(luminance_sum2 / total_weight - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2)
+                // calculate the avg color and variance of each quadrant
+                for(int i = 0; i < 8; i++) {
+                    float mean = luminance_sum[i] / total_weight[i];
+                    variance[i] = abs(luminance_sum2[i] / total_weight[i] - mean * mean); // variance = (sum_L^2 / n) - (sum_L^2 / n^2) 
+                    outData.colors[i] = float4(col_sum[i] / total_weight[i], variance[i]); 
+                }
 
-                return float4(col_sum / total_weight, std);
+                return outData;
             }
 
             // The fragment program is where we do most of our work as to determine the color based on std deviations of the 4 quardrants
             float4 fp(v2f i) : SV_Target {
-                // take variance of each quadrant and choose min
-                float4 q1 = SampleQuadrant(i.uv, _KernelSize, 1);
-                float q1_weight = 1.0 / pow(0.0001 + sqrt(q1.a), _QuadrantWeightPower);
-                float4 q2 = SampleQuadrant(i.uv, _KernelSize, 2);
-                float q2_weight = 1.0 / pow(0.0001 + sqrt(q2.a), _QuadrantWeightPower);
-                float4 q3 = SampleQuadrant(i.uv, _KernelSize, 3);
-                float q3_weight = 1.0 / pow(0.0001 + sqrt(q3.a), _QuadrantWeightPower);
-                float4 q4 = SampleQuadrant(i.uv, _KernelSize, 4);
-                float q4_weight = 1.0 / pow(0.0001 + sqrt(q4.a), _QuadrantWeightPower);
-                float4 q5 = SampleQuadrant(i.uv, _KernelSize, 5);
-                float q5_weight = 1.0 / pow(0.0001 + sqrt(q5.a), _QuadrantWeightPower);
-                float4 q6 = SampleQuadrant(i.uv, _KernelSize, 6);
-                float q6_weight = 1.0 / pow(0.0001 + sqrt(q6.a), _QuadrantWeightPower);
-                float4 q7 = SampleQuadrant(i.uv, _KernelSize, 7);
-                float q7_weight = 1.0 / pow(0.0001 + sqrt(q7.a), _QuadrantWeightPower);
-                float4 q8 = SampleQuadrant(i.uv, _KernelSize, 8);
-                float q8_weight = 1.0 / pow(0.0001 + sqrt(q8.a), _QuadrantWeightPower);
+                // avg color and their variance of each 8 quadrance
+                QuadrantData quardrant_data = SampleQuadrant(i.uv, _KernelSize);
 
-                // calculate the total weight and the combined color
-                float total_weight = q1_weight + q2_weight + q3_weight + q4_weight + q5_weight + q6_weight + q7_weight + q8_weight;
-                float3 combined_color = q1.rgb * q1_weight + q2.rgb * q2_weight + q3.rgb * q3_weight + q4.rgb * q4_weight;
-                combined_color += q5.rgb * q5_weight + q6.rgb * q6_weight + q7.rgb * q7_weight + q8.rgb * q8_weight;
+                float3 combined_color = 0;
+                float total_weight = 0;
 
-                return saturate(float4(combined_color / total_weight, 1.0f));
+                for (int i = 0; i < 8; i++) {
+                    float quadrant_weighting = 1.0 / (pow(0.0001 + sqrt(quardrant_data.colors[i].a), _QuadrantWeightPower));
+                    float3 quadrant_color = quardrant_data.colors[i].rgb;
+                    
+                    combined_color += quadrant_color * quadrant_weighting;
+                    total_weight += quadrant_weighting;
+                }
 
-                // // TEST DUE TO BUG, ONLY TEMPORARY
-                // // creates a mask where the quadrant w the lowest variance is a 1 and the rest is 0
-                // // bc we can also have cases where two quardrants have the same variance
-                // float minstd = min(q1.a, min(q2.a, min(q3.a, min(q4.a, min(q5.a, min(q6.a, min(q7.a, q8.a)))))));
-                // int4 q  = float4(q1.a, q2.a, q3.a, q4.a) == minstd;
-                // int4 q_2 = float4(q5.a, q6.a, q7.a, q8.a) == minstd;
-
-                // // if all 2 or more quardrants have the same variance then just choose all of them
-                // if (dot(q, 1) > 1) // dot of q here would be the amount of 1 in the mask
-                //     return saturate(float4((q1.rgb + q2.rgb + q3.rgb + q4.rgb + q5.rgb + q6.rgb + q7.rgb + q8.rgb) / 8.0f, 1.0f));
-                // else// else return the lowest quardrant's avg color using the mask we made
-                //     return saturate(float4(q1.rgb * q.x + q2.rgb * q.y + q3.rgb * q.z + q4.rgb * q.w + q5.rgb * q_2.x + q6.rgb * q_2.y + q7.rgb * q_2.z + q8.rgb * q_2.w, 1.0f));
+                return float4(combined_color / total_weight, 1.0);
             }
             ENDCG
         }
