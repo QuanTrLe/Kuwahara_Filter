@@ -72,7 +72,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float variance[8] = {0, 0, 0, 0, 0, 0, 0, 0};
                 float4 quadrant_colors[8] = {(float4)0, (float4)0, (float4)0, (float4)0, (float4)0, (float4)0, (float4)0, (float4)0};
 
-                // loop through all the rows and cols 
+                // loop through all the rows and cols
                 [loop]
                 for (int x = -kernelSize; x <= kernelSize; ++x) {
                     [loop]
