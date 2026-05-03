@@ -53,11 +53,13 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                 int kernelRadius = _KernelSize / 2;
 
                 //float zeta = 2.0f / (kernelRadius / 2);
-                float zeta = _Zeta; // origin overlap of sectors
+                // origin overlap of sectors, think how offset the parabola is to the center
+                float zeta = _Zeta;
 
                 float zeroCross = _ZeroCrossing;
                 float sinZeroCross = sin(zeroCross);
-                float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross); // boundary overlap of sectors
+                // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
+                float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
 
                 for (k = 0; k < _N; ++k) {
                     m[k] = 0.0f;
@@ -76,42 +78,46 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                         float sector_weight, vxx, vyy;
                         
                         /* Calculate Polynomial Weights */
-                        vxx = zeta - eta * v.x * v.x;
-                        vyy = zeta - eta * v.y * v.y;
+                        // try to think of these as thresholds of how fast the parabola weight curves
+                        vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
+                        vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
 
-                        sector_weight = max(0, v.y + vxx); 
+                        /* calculating the weights of each quardrant of the 8 sector circle kernel */
+                        // the sector_weight calcs are for ex if v.y + vxx are positive then the pixel is inside the leaf / the weight curve 
+                        sector_weight = max(0, v.y + vxx); // top quardrant of kernel
                         quardrant_weights[0] = sector_weight * sector_weight;
                         sum += quardrant_weights[0];
 
-                        sector_weight = max(0, -v.x + vyy); 
+                        sector_weight = max(0, -v.x + vyy); // right quardrant of kernel
                         quardrant_weights[2] = sector_weight * sector_weight;
                         sum += quardrant_weights[2];
 
-                        sector_weight = max(0, -v.y + vxx); 
+                        sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
                         quardrant_weights[4] = sector_weight * sector_weight;
                         sum += quardrant_weights[4];
 
-                        sector_weight = max(0, v.x + vyy); 
+                        sector_weight = max(0, v.x + vyy); // left quardrant of kernel
                         quardrant_weights[6] = sector_weight * sector_weight;
                         sum += quardrant_weights[6];
 
+                        /* recalculating the weight modifiers for quardrants that are rotated 45 */
                         v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
                         vxx = zeta - eta * v.x * v.x;
                         vyy = zeta - eta * v.y * v.y;
 
-                        sector_weight = max(0, v.y + vxx); 
+                        sector_weight = max(0, v.y + vxx); // north east quardrant
                         quardrant_weights[1] = sector_weight * sector_weight;
                         sum += quardrant_weights[1];
 
-                        sector_weight = max(0, -v.x + vyy); 
+                        sector_weight = max(0, -v.x + vyy); // south east quardrant
                         quardrant_weights[3] = sector_weight * sector_weight;
                         sum += quardrant_weights[3];
 
-                        sector_weight = max(0, -v.y + vxx); 
+                        sector_weight = max(0, -v.y + vxx); // south west quardrant
                         quardrant_weights[5] = sector_weight * sector_weight;
                         sum += quardrant_weights[5];
 
-                        sector_weight = max(0, v.x + vyy); 
+                        sector_weight = max(0, v.x + vyy); // north west quardrant
                         quardrant_weights[7] = sector_weight * sector_weight;
                         sum += quardrant_weights[7];
                         
