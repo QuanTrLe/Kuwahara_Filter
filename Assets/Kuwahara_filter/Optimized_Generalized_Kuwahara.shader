@@ -52,12 +52,12 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
 
                 int kernelRadius = _KernelSize / 2;
 
-                //float zeta = 2.0f / (kernelRadius);
-                float zeta = _Zeta;
+                //float zeta = 2.0f / (kernelRadius / 2);
+                float zeta = _Zeta; // origin overlap of sectors
 
                 float zeroCross = _ZeroCrossing;
                 float sinZeroCross = sin(zeroCross);
-                float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
+                float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross); // boundary overlap of sectors
 
                 for (k = 0; k < _N; ++k) {
                     m[k] = 0.0f;
@@ -68,57 +68,57 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                 for (int y = -kernelRadius; y <= kernelRadius; ++y) {
                     [loop]
                     for (int x = -kernelRadius; x <= kernelRadius; ++x) {
-                        float2 v = float2(x, y) / kernelRadius;
+                        float2 v = float2(x, y) / kernelRadius; // normalizing from pixel cords to [-1, 1]
                         float3 c = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
-                        c = saturate(c);
-                        float sum = 0;
-                        float w[8];
-                        float z, vxx, vyy;
+                        c = saturate(c); // saturate clamps between 0 and 1
+                        float sum = 0; // total weight for calc the final color
+                        float quardrant_weights[8]; // weight for each quardrant
+                        float sector_weight, vxx, vyy;
                         
                         /* Calculate Polynomial Weights */
                         vxx = zeta - eta * v.x * v.x;
                         vyy = zeta - eta * v.y * v.y;
 
-                        z = max(0, v.y + vxx); 
-                        w[0] = z * z;
-                        sum += w[0];
+                        sector_weight = max(0, v.y + vxx); 
+                        quardrant_weights[0] = sector_weight * sector_weight;
+                        sum += quardrant_weights[0];
 
-                        z = max(0, -v.x + vyy); 
-                        w[2] = z * z;
-                        sum += w[2];
+                        sector_weight = max(0, -v.x + vyy); 
+                        quardrant_weights[2] = sector_weight * sector_weight;
+                        sum += quardrant_weights[2];
 
-                        z = max(0, -v.y + vxx); 
-                        w[4] = z * z;
-                        sum += w[4];
+                        sector_weight = max(0, -v.y + vxx); 
+                        quardrant_weights[4] = sector_weight * sector_weight;
+                        sum += quardrant_weights[4];
 
-                        z = max(0, v.x + vyy); 
-                        w[6] = z * z;
-                        sum += w[6];
+                        sector_weight = max(0, v.x + vyy); 
+                        quardrant_weights[6] = sector_weight * sector_weight;
+                        sum += quardrant_weights[6];
 
                         v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
                         vxx = zeta - eta * v.x * v.x;
                         vyy = zeta - eta * v.y * v.y;
 
-                        z = max(0, v.y + vxx); 
-                        w[1] = z * z;
-                        sum += w[1];
+                        sector_weight = max(0, v.y + vxx); 
+                        quardrant_weights[1] = sector_weight * sector_weight;
+                        sum += quardrant_weights[1];
 
-                        z = max(0, -v.x + vyy); 
-                        w[3] = z * z;
-                        sum += w[3];
+                        sector_weight = max(0, -v.x + vyy); 
+                        quardrant_weights[3] = sector_weight * sector_weight;
+                        sum += quardrant_weights[3];
 
-                        z = max(0, -v.y + vxx); 
-                        w[5] = z * z;
-                        sum += w[5];
+                        sector_weight = max(0, -v.y + vxx); 
+                        quardrant_weights[5] = sector_weight * sector_weight;
+                        sum += quardrant_weights[5];
+
+                        sector_weight = max(0, v.x + vyy); 
+                        quardrant_weights[7] = sector_weight * sector_weight;
+                        sum += quardrant_weights[7];
                         
-                        z = max(0, v.x + vyy); 
-                        w[7] = z * z;
-                        sum += w[7];
-                        
-                        float g = exp(-3.125f * dot(v,v)) / sum;
+                        float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
                         
                         for (int k = 0; k < 8; ++k) {
-                            float wk = w[k] * g;
+                            float wk = quardrant_weights[k] * g;
                             m[k] += float4(c * wk, wk);
                             s[k] += c * c * wk;
                         }
