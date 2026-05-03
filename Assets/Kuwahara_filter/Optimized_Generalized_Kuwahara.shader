@@ -31,7 +31,7 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
             return o;
         }
 
-        // vars
+        // vars: Q is sharpness and N is the amount of sectors in the kernel
         #define PI 3.14159265358979323846f
         sampler2D _MainTex, _K0;
         float4 _MainTex_TexelSize;
@@ -78,30 +78,39 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                         /* Calculate Polynomial Weights */
                         vxx = zeta - eta * v.x * v.x;
                         vyy = zeta - eta * v.y * v.y;
+
                         z = max(0, v.y + vxx); 
                         w[0] = z * z;
                         sum += w[0];
+
                         z = max(0, -v.x + vyy); 
                         w[2] = z * z;
                         sum += w[2];
+
                         z = max(0, -v.y + vxx); 
                         w[4] = z * z;
                         sum += w[4];
+
                         z = max(0, v.x + vyy); 
                         w[6] = z * z;
                         sum += w[6];
+
                         v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
                         vxx = zeta - eta * v.x * v.x;
                         vyy = zeta - eta * v.y * v.y;
+
                         z = max(0, v.y + vxx); 
                         w[1] = z * z;
                         sum += w[1];
+
                         z = max(0, -v.x + vyy); 
                         w[3] = z * z;
                         sum += w[3];
+
                         z = max(0, -v.y + vxx); 
                         w[5] = z * z;
                         sum += w[5];
+                        
                         z = max(0, v.x + vyy); 
                         w[7] = z * z;
                         sum += w[7];
@@ -129,7 +138,7 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
 
                 return saturate(output / output.w);
             }
-            
+
             ENDCG
         }
     }

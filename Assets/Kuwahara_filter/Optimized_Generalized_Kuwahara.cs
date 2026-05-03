@@ -14,14 +14,14 @@ public class Optimized_Generalized_Kuwahara : MonoBehaviour {
     public float hardness = 8;
     
     [Range(0.01f, 2.0f)]
-    public float zeroCrossing = 0.58f;
+    public float zeroCrossing = 0.58f; // for calculating eta (sector boundary overlap), from this and zeta
 
-    public bool useZeta = false;
+    public bool useZeta = false; // how much sectors overlap at origin
     [Range(0.01f, 3.0f)]
     public float zeta = 1.0f;
     
     [Range(1, 4)]
-    public int passes = 1;
+    public int passes = 1; // how many times we run the image through the filter
 
     private Material kuwaharaMat;
     

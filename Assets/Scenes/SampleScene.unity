@@ -481,13 +481,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   generalizedKuwaharaShader: {fileID: 4800000, guid: ecb491b6c40a5734e8013a739acc785d, type: 3}
-  kernelSize: 20
+  kernelSize: 10
   sharpness: 8
   hardness: 8
   zeroCrossing: 0.58
-  useZeta: 1
+  useZeta: 0
   zeta: 0.4
-  passes: 1
+  passes: 2
 --- !u!1 &1055013056
 GameObject:
   m_ObjectHideFlags: 0
