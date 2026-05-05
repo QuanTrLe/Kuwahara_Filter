@@ -83,7 +83,7 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                         vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
 
                         /* calculating the weights of each quardrant of the 8 sector circle kernel */
-                        // the sector_weight calcs are for ex if v.y + vxx are positive then the pixel is inside the leaf / the weight curve 
+                        // the weight calculation (for ex v.y + vxx) are positive then the pixel is inside the leaf / the weight curve 
                         sector_weight = max(0, v.y + vxx); // top quardrant of kernel
                         quardrant_weights[0] = sector_weight * sector_weight;
                         sum += quardrant_weights[0];
