@@ -2,20 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Generalized_Kuwahara : MonoBehaviour {
+public class Optimized_Generalized_Kuwahara : MonoBehaviour {
     public Shader generalizedKuwaharaShader;
     
     [Range(1, 20)] // circular kernel radius to use in filter
     public int kernelSize = 1;
 
-    [Range(0.1f, 10.0f)] // technically std dev in gaussian weight
-    public float gaussianSigma = 5.0f;
+    [Range(1.0f, 18.0f)]
+    public float sharpness = 8;
+    [Range(1.0f, 100.0f)]
+    public float hardness = 8;
+    
+    [Range(0.01f, 2.0f)]
+    public float zeroCrossing = 0.58f; // for calculating eta (sector boundary overlap), from this and zeta
 
-    [Range(1, 10)] // multiplication for each quadrant's weighting in the final color 
-    public int quadrantWeightPower = 6;
+    public bool useZeta = false; // how much sectors overlap at origin
+    [Range(0.01f, 3.0f)]
+    public float zeta = 1.0f;
     
     [Range(1, 4)]
-    public int passes = 1;
+    public int passes = 1; // how many times we run the image through the filter
 
     private Material kuwaharaMat;
     
@@ -27,8 +33,11 @@ public class Generalized_Kuwahara : MonoBehaviour {
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize);
-        kuwaharaMat.SetFloat("_GaussianSigma", gaussianSigma);
-        kuwaharaMat.SetInt("_QuadrantWeightPower", quadrantWeightPower);
+        kuwaharaMat.SetInt("_N", 8);
+        kuwaharaMat.SetFloat("_Q", sharpness);
+        kuwaharaMat.SetFloat("_Hardness", hardness);
+        kuwaharaMat.SetFloat("_ZeroCrossing", zeroCrossing);
+        kuwaharaMat.SetFloat("_Zeta", useZeta ? zeta : 2.0f / (kernelSize / 2.0f));
 
         // make a new rendertexture for how many passes we will have
         RenderTexture[] kuwaharaPasses = new RenderTexture[passes];
