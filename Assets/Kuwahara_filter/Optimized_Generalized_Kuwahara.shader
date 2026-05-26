@@ -46,7 +46,7 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
             #pragma fragment fp
 
             float4 fp(v2f i) : SV_Target {
-                int k;
+                int quardrant;
                 float4 m[8];
                 float3 s[8];
 
@@ -61,9 +61,9 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                 // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
                 float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
 
-                for (k = 0; k < _N; ++k) {
-                    m[k] = 0.0f;
-                    s[k] = 0.0f;
+                for (quardrant = 0; quardrant < _N; ++quardrant) {
+                    m[quardrant] = 0.0f;
+                    s[quardrant] = 0.0f;
                 }
 
                 [loop]
@@ -123,23 +123,24 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                         
                         float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
                         
-                        for (int k = 0; k < 8; ++k) {
-                            float wk = quardrant_weights[k] * g;
-                            m[k] += float4(c * wk, wk);
-                            s[k] += c * c * wk;
+                        for (int quardrant = 0; quardrant < 8; ++quardrant) {
+                            float wk = quardrant_weights[quardrant] * g;
+                            m[quardrant] += float4(c * wk, wk);
+                            s[quardrant] += c * c * wk;
                         }
                     }
                 }
 
+                // calculating the final color of the pixel
                 float4 output = 0;
-                for (k = 0; k < _N; ++k) {
-                    m[k].rgb /= m[k].w;
-                    s[k] = abs(s[k] / m[k].w - m[k].rgb * m[k].rgb);
+                for (quardrant = 0; quardrant < _N; ++quardrant) {
+                    m[quardrant].rgb /= m[quardrant].w;
+                    s[quardrant] = abs(s[quardrant] / m[quardrant].w - m[quardrant].rgb * m[quardrant].rgb);
 
-                    float sigma2 = s[k].r + s[k].g + s[k].b;
+                    float sigma2 = s[quardrant].r + s[quardrant].g + s[quardrant].b;
                     float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Q));
 
-                    output += float4(m[k].rgb * w, w);
+                    output += float4(m[quardrant].rgb * w, w);
                 }
 
                 return saturate(output / output.w);
