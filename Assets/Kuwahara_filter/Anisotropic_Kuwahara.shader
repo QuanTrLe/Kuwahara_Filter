@@ -80,12 +80,20 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
         // Blur pass 1
         Pass {
+            CGPROGRAM
+            #pragma vertex vp
+            #pragma fragment fp
 
+            ENDCG
         }
 
         // Blur pass 2
         Pass {
+            CGPROGRAM
+            #pragma vertex vp
+            #pragma fragment fp
 
+            ENDCG
         }
 
         // Final Kuwahara pass
