@@ -6,12 +6,15 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
     public Shader anisotropicKuwaharaShader;
     
     [Range(1, 20)] // circular kernel radius to use in filter
-    public int kernelSize = 1;
+    public int kernelSize = 2;
 
     [Range(1.0f, 18.0f)]
     public float sharpness = 8;
     [Range(1.0f, 100.0f)]
     public float hardness = 8;
+
+    [Range(0.01f, 2.0f)]
+    public float alpha = 1.0f;
     
     [Range(0.01f, 2.0f)]
     public float zeroCrossing = 0.58f; // for calculating eta (sector boundary overlap), from this and zeta
@@ -36,6 +39,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
         kuwaharaMat.SetInt("_N", 8);
         kuwaharaMat.SetFloat("_Q", sharpness);
         kuwaharaMat.SetFloat("_Hardness", hardness);
+        kuwaharaMat.SetFloat("_Alpha", alpha);
         kuwaharaMat.SetFloat("_ZeroCrossing", zeroCrossing);
         kuwaharaMat.SetFloat("_Zeta", useZeta ? zeta : 2.0f / (kernelSize / 2.0f));
 

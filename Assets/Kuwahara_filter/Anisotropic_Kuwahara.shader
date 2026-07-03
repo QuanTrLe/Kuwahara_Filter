@@ -32,12 +32,63 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
         // vars: Q is sharpness and N is the amount of sectors in the kernel
         #define PI 3.14159265358979323846f
         sampler2D _MainTex, _K0;
-        float4 _MainTex_TexelSize;
+        float4 _MainTex_TexelSize; // Vector4(1 / width, 1 / height, width, height)
         int _KernelSize, _N, _Size;
-        float _Hardness, _Q, _ZeroCrossing, _Zeta;
+        float _Hardness, _Q, _Alpha, _ZeroCrossing, _Zeta;
+
+        float gaussian(float sigma, float pos) {
+            return (1.0f / sqrt(2.0f * PI * sigma * sigma)) * exp(-(pos * pos) / (2.0f * sigma * sigma));
+        }
 
         ENDCG
+        
+        // Calculating eigenvectors
+        Pass {
+            CGPROGRAM
+            #pragma vertex vp
+            #pragma fragment fp
 
+            float4 fp(v2f i): SV_TARGET {
+                float2 d = _MainTex_TexelSize.xy; // how much to move when inspecting each texel
+
+                // horizontal sobel operator with normalization
+                float3 Sx = (
+                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
+                    2.0 * tex2D(_MainTex, i.uv + float2(-d.x, 0.0)).rgb +
+                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
+                    -1.0 * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
+                    -2.0 * tex2D(_MainTex, i.uv + float2(d.x, 0.0)).rgb +
+                    -1.0 * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
+                ) / 4.0f;
+
+                // vertical sobel operator
+                float3 Sy = (
+                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
+                    2.0 * tex2D(_MainTex, i.uv + float2(0.0, -d.y)).rgb +
+                    1.0 * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
+                    -1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
+                    -2.0 * tex2D(_MainTex, i.uv + float2(0.0, d.y)).rgb +
+                    -1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb
+                ) / 4.0f;
+
+                // data needed for the structure tensor matrix
+                return float4(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy), 1.0);
+            }
+
+            ENDCG
+        }
+
+        // Blur pass 1
+        Pass {
+
+        }
+
+        // Blur pass 2
+        Pass {
+
+        }
+
+        // Final Kuwahara pass
         Pass {
             CGPROGRAM
             #pragma vertex vp
