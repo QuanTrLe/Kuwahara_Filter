@@ -306,6 +306,7 @@ GameObject:
   - component: {fileID: 519420033}
   - component: {fileID: 519420034}
   - component: {fileID: 519420035}
+  - component: {fileID: 519420036}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -475,7 +476,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ae09c80363205740964edb0bad09656, type: 3}
   m_Name: 
@@ -488,6 +489,27 @@ MonoBehaviour:
   useZeta: 0
   zeta: 0.4
   passes: 2
+--- !u!114 &519420036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecc45aa0e2fa2d941adc2c782af2621b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  anisotropicKuwaharaShader: {fileID: 4800000, guid: 52eef89b6a2d70b4d8c314bcd46ce1ff, type: 3}
+  kernelSize: 2
+  sharpness: 8
+  hardness: 8
+  alpha: 1
+  zeroCrossing: 0.58
+  useZeta: 0
+  zeta: 1
+  passes: 1
 --- !u!1 &1055013056
 GameObject:
   m_ObjectHideFlags: 0
