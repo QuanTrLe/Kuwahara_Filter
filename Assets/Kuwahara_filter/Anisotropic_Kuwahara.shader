@@ -83,17 +83,33 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             CGPROGRAM
             #pragma vertex vp
             #pragma fragment fp
+            
+            float4 fp(v2f i): SV_TARGET {
+                int kernelRadius = 5;
+
+                float4 col = 0;
+                float kernelSum = 0.0f;
+
+                // go over the row and get the texel at the point + the gaussian weighted of it
+                for (int x = -kernelRadius; x <= kernelRadius; x++) {
+                    float4 c = tex2D(_MainTex, i.uv + float2(x, 0) * _MainTex_TexelSize.xy);
+                    float gauss = gaussian(2.0f, x);
+
+                    // add to total and total weight for later
+                    col += c * gauss;
+                    kernelSum += gauss;
+                }
+
+                // return total divided by gauss weight
+                return col / kernelSum;
+            }
 
             ENDCG
         }
 
         // Blur pass 2
         Pass {
-            CGPROGRAM
-            #pragma vertex vp
-            #pragma fragment fp
-
-            ENDCG
+            
         }
 
         // Final Kuwahara pass
