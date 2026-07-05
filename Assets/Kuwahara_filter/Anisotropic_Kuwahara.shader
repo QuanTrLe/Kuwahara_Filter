@@ -83,6 +83,26 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             CGPROGRAM
             #pragma vertex vp
             #pragma fragment fp
+            
+            float4 fp(v2f i): SV_TARGET {
+                int kernelRadius = 5;
+
+                float4 col = 0;
+                float kernelSum = 0.0f;
+
+                // go over the row and get the texel at the point + the gaussian weighted of it
+                for (int x = -kernelRadius; x <= kernelRadius; x++) {
+                    float4 c = tex2D(_MainTex, i.uv + float2(x, 0) * _MainTex_TexelSize.xy);
+                    float gauss = gaussian(2.0f, x);
+
+                    // add to total and total weight for later
+                    col += c * gauss;
+                    kernelSum += gauss;
+                }
+
+                // return total divided by gauss weight
+                return col / kernelSum;
+            }
 
             ENDCG
         }
@@ -92,6 +112,46 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             CGPROGRAM
             #pragma vertex vp
             #pragma fragment fp
+
+            float4 fp(v2f i): SV_Target {
+                int kernelRadius = 5;
+
+                float4 col = 0;
+                float kernelSum = 0.0f;
+
+                // go over the column and get the texel at the point + the gaussian weighted of it
+                for (int y = -kernelRadius; y <= kernelRadius; y++) {
+                    float4 c = tex2D(_MainTex, i.uv + float2(0, y) * _MainTex_TexelSize.xy);
+                    float gauss = gaussian(2.0f, y);
+
+                    // add to total and total weight for later
+                    col += c * gauss;
+                    kernelSum += gauss;
+                }
+
+                // at this point it shoulda been gaussian blurred both vertical and horizontal
+                float3 g = col.rgb / kernelSum;
+
+                // lambda calculatuions for eigen vector that points in dir of minimal change
+                float sum_eg = g.y + g.x;
+                float inner_sqrt = sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z);
+                float lambda1 = 0.5f * (sum_eg + inner_sqrt);
+                float lambda2 = 0.5f * (sum_eg - inner_sqrt);
+
+                // eigenvector directed in dir of min change
+                float v = float2(lambda1 - g.x, -g.z);
+                float2 t = length(v) > 0.0 ? normalize(v) : float2(0.0f, 1.0f);
+                float phi = -atan2(t.y, t.x); // local orientation
+
+                
+                // the anisotropy
+                float Alpha = 0.0f;
+                if (lambda1 + lambda2 > 0.0f) {
+                    Alpha = (lambda1 - lambda2) / (lambda1 + lambda2);
+                }
+
+                return float4(t, phi, Alpha);
+            }
 
             ENDCG
         }
