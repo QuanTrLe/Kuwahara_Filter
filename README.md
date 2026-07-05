@@ -12,6 +12,8 @@ Including the base image, the basic version, the optimized generalized version, 
 ### Basic Kuwahara Filter
 The basic Kuwahara filter works by taking a pixel and a square kernel around it. The kernel is then divided into 4 sections, with each section's color getting inspected for standard deviation. The pixel then chooses the average color of the section that has the lowest deviation. This version of the filter would consequently leave square effects over the image, with square blocks of pixels having around the same color. This creates a painterly effect, which is what inspired me to do this project.
 
+![alt text][kuwahara_basic_filter_kernel]
+
 While the filter is easy to implement, there's also a lot of drawbacks with the most basic version, mainly due to the shape of the kernel and the way that it calculates the color after the inspection of the kernel sections. Since the square kernels creates blocky artefact it's not fully good enough if our aim is to simulate painting strokes. Additionally, the pixel colors are also vulnerable to regions with small changes since the filter only chooses the average color of one section. A note outside of this is that if two sections have the same standard deviation in color, if not handled, the pixel color can also flicker and be unpredictable.
 
 ### Generalized Kuwahara Filter
@@ -27,3 +29,5 @@ Workings of the anisotropic Kuwahara filter
 4. [Sobel Operator explaination](https://homepages.inf.ed.ac.uk/rbf/HIPR2/sobel.htm)
 5. [Gaussian Weight and Smoothing](https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm)
 6. [Kuwahara Filter Wikipedia](https://en.wikipedia.org/wiki/Kuwahara_filter) 
+
+[kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/Images/Kuwahara_square_kernel.jpg "[Basic Kuwahara Filter Kernel](https://en.wikipedia.org/wiki/Kuwahara_filter)"
