@@ -30,4 +30,4 @@ Workings of the anisotropic Kuwahara filter
 5. [Gaussian Weight and Smoothing](https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm)
 6. [Kuwahara Filter Wikipedia](https://en.wikipedia.org/wiki/Kuwahara_filter) 
 
-[kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/Images/Kuwahara_square_kernel.jpg "[Basic Kuwahara Filter Kernel](https://en.wikipedia.org/wiki/Kuwahara_filter)"
+[kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "[Basic Kuwahara Filter Kernel](https://en.wikipedia.org/wiki/Kuwahara_filter)"
