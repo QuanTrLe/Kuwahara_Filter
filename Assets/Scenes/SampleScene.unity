@@ -502,7 +502,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anisotropicKuwaharaShader: {fileID: 4800000, guid: 52eef89b6a2d70b4d8c314bcd46ce1ff, type: 3}
-  kernelSize: 2
+  kernelSize: 15
   sharpness: 8
   hardness: 8
   alpha: 1

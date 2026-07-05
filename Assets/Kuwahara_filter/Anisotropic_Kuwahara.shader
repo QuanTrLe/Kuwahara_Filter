@@ -109,7 +109,39 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
         // Blur pass 2
         Pass {
-            
+            CGPROGRAM
+            #pragma vertex vp
+            #pragma fragment fp
+
+            float4 fp(v2f i): SV_Target {
+                int kernelRadius = 5;
+
+                float4 col = 0;
+                float kernelSum = 0.0f;
+
+                // go over the column and get the texel at the point + the gaussian weighted of it
+                for (int y = -kernelRadius; y <= kernelRadius; y++) {
+                    float4 c = tex2D(_MainTex, i.uv + float2(0, y) * _MainTex_TexelSize.xy);
+                    float gauss = gaussian(2.0f, y);
+
+                    // add to total and total weight for later
+                    col += c * gauss;
+                    kernelSum += gauss;
+                }
+
+                // at this point it shoulda been gaussian blurred both vertical and horizontal
+                float3 g = col.rgb / kernelSum;
+
+                // lambda calculatuions for eigen vector that points in dir of minimal change
+                float sum_eg = g.y + g.x;
+                float inner_sqrt = sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z);
+                float lambda1 = 0.5f * (sum_eg + inner_sqrt);
+                float lambda2 = 0.5f * (sum_eg - inner_sqrt);
+
+                return 0;
+            }
+
+            ENDCG
         }
 
         // Final Kuwahara pass
