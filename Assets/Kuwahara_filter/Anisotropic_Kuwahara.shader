@@ -145,12 +145,12 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                 
                 // the anisotropy
-                float Alpha = 0.0f;
+                float Anisotropy = 0.0f;
                 if (lambda1 + lambda2 > 0.0f) {
-                    Alpha = (lambda1 - lambda2) / (lambda1 + lambda2);
+                    Anisotropy = (lambda1 - lambda2) / (lambda1 + lambda2);
                 }
 
-                return float4(t, phi, Alpha);
+                return float4(t, phi, Anisotropy);
             }
 
             ENDCG
@@ -163,6 +163,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             #pragma fragment fp
 
             float4 fp(v2f i) : SV_Target {
+                float alpha = _Alpha;
                 int quardrant;
                 float4 m[8];
                 float3 s[8];
