@@ -170,6 +170,22 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float a = float((kernelRadius)) * clamp((alpha + t.w) / alpha, 0.1f, 2.0f); // ellipse major axis
                 float b = float((kernelRadius)) * clamp(alpha / (alpha + t.w), 0.1f, 2.0f); // ellipse minor axis
 
+                // angles to make the ellipse matrix
+                // the t from the last pass are t-eigenvec (rg/xy), phi-change dir (b/z), and anisotropy (a/w)
+                float cos_phi = cos(t.z);
+                float sin_phi = sin(t.z);
+
+                // matrix handling rotation, using phi
+                float2x2 R = {cos_phi, -sin_phi,
+                              sin_phi, cos_phi};
+                
+                // matrix handling axis scaling, using alpha and anisotropy
+                float2x2 S = {0.5f / a, 0.0f,
+                              0.0f, 0.5f / b};
+                
+                // complete matrix for controlling ellipse
+                float2x2 SR = mul(S, R);
+
                 int quardrant;
                 float4 m[8];
                 float3 s[8];
