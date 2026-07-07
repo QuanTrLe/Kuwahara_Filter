@@ -31,7 +31,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
         // vars: Q is sharpness and N is the amount of sectors in the kernel
         #define PI 3.14159265358979323846f
-        sampler2D _MainTex, _K0;
+        sampler2D _MainTex, _TFM;
         float4 _MainTex_TexelSize; // Vector4(1 / width, 1 / height, width, height)
         int _KernelSize, _N, _Size;
         float _Hardness, _Q, _Alpha, _ZeroCrossing, _Zeta;
@@ -145,12 +145,12 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                 
                 // the anisotropy
-                float Alpha = 0.0f;
+                float Anisotropy = 0.0f;
                 if (lambda1 + lambda2 > 0.0f) {
-                    Alpha = (lambda1 - lambda2) / (lambda1 + lambda2);
+                    Anisotropy = (lambda1 - lambda2) / (lambda1 + lambda2);
                 }
 
-                return float4(t, phi, Alpha);
+                return float4(t, phi, Anisotropy);
             }
 
             ENDCG
@@ -163,11 +163,32 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             #pragma fragment fp
 
             float4 fp(v2f i) : SV_Target {
+                float alpha = _Alpha; // tunning param for ellipse matrix
+                float4 t = tex2D(_TFM, i.uv);
+
+                int kernelRadius = _KernelSize / 2;
+                float a = float((kernelRadius)) * clamp((alpha + t.w) / alpha, 0.1f, 2.0f); // ellipse major axis
+                float b = float((kernelRadius)) * clamp(alpha / (alpha + t.w), 0.1f, 2.0f); // ellipse minor axis
+
+                // angles to make the ellipse matrix
+                // the t from the last pass are t-eigenvec (rg/xy), phi-change dir (b/z), and anisotropy (a/w)
+                float cos_phi = cos(t.z);
+                float sin_phi = sin(t.z);
+
+                // matrix handling rotation, using phi
+                float2x2 R = {cos_phi, -sin_phi,
+                              sin_phi, cos_phi};
+                
+                // matrix handling axis scaling, using alpha and anisotropy
+                float2x2 S = {0.5f / a, 0.0f,
+                              0.0f, 0.5f / b};
+                
+                // complete matrix for controlling ellipse
+                float2x2 SR = mul(S, R);
+
                 int quardrant;
                 float4 m[8];
                 float3 s[8];
-
-                int kernelRadius = _KernelSize / 2;
 
                 //float zeta = 2.0f / (kernelRadius / 2);
                 // origin overlap of sectors, think how offset the parabola is to the center
