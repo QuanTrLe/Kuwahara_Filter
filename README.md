@@ -31,5 +31,6 @@ Workings of the anisotropic Kuwahara filter
 4. [Sobel Operator explaination](https://homepages.inf.ed.ac.uk/rbf/HIPR2/sobel.htm)
 5. [Gaussian Weight and Smoothing](https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm)
 6. [Kuwahara Filter Wikipedia](https://en.wikipedia.org/wiki/Kuwahara_filter) 
+7. [Ellipse Wikipedia](https://en.wikipedia.org/wiki/Ellipse)
 
 [kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "[Basic Kuwahara Filter Kernel](https://en.wikipedia.org/wiki/Kuwahara_filter)"

@@ -31,7 +31,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
         // vars: Q is sharpness and N is the amount of sectors in the kernel
         #define PI 3.14159265358979323846f
-        sampler2D _MainTex, _K0;
+        sampler2D _MainTex, _TFM;
         float4 _MainTex_TexelSize; // Vector4(1 / width, 1 / height, width, height)
         int _KernelSize, _N, _Size;
         float _Hardness, _Q, _Alpha, _ZeroCrossing, _Zeta;
@@ -163,12 +163,16 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             #pragma fragment fp
 
             float4 fp(v2f i) : SV_Target {
-                float alpha = _Alpha;
+                float alpha = _Alpha; // tunning param for ellipse matrix
+                float4 t = tex2D(_TFM, i.uv);
+
+                int kernelRadius = _KernelSize / 2;
+                float a = float((kernelRadius)) * clamp((alpha + t.w) / alpha, 0.1f, 2.0f); // ellipse major axis
+                float b = float((kernelRadius)) * clamp(alpha / (alpha + t.w), 0.1f, 2.0f); // ellipse minor axis
+
                 int quardrant;
                 float4 m[8];
                 float3 s[8];
-
-                int kernelRadius = _KernelSize / 2;
 
                 //float zeta = 2.0f / (kernelRadius / 2);
                 // origin overlap of sectors, think how offset the parabola is to the center

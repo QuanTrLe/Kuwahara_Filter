@@ -14,7 +14,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
     public float hardness = 8;
 
     [Range(0.01f, 2.0f)]
-    public float alpha = 1.0f;
+    public float alpha = 1.0f; // alpha > 0 is a tuning parameter for the ellipse matrix (if a -> inf then it becomes an identity matrix) 
     
     [Range(0.01f, 2.0f)]
     public float zeroCrossing = 0.58f; // for calculating eta (sector boundary overlap), from this and zeta
@@ -35,7 +35,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
 
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
         // set all the variables of the shader we've had above from the editor 
-        kuwaharaMat.SetInt("_KernelSize", kernelSize);
+        kuwaharaMat.SetInt("_KernelSize", kernelSize); // how big the kernel is
         kuwaharaMat.SetInt("_N", 8);
         kuwaharaMat.SetFloat("_Q", sharpness);
         kuwaharaMat.SetFloat("_Hardness", hardness);
