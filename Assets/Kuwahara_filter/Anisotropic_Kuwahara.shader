@@ -186,18 +186,22 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 // complete matrix for controlling ellipse
                 float2x2 SR = mul(S, R);
 
-                int quardrant;
-                float4 m[8];
-                float3 s[8];
+                // bounds of the ellipse to check pixels for
+                int max_x = int(sqrt(a * a * cos_phi * cos_phi + b * b * sin_phi * sin_phi));
+                int max_y = int(sqrt(a * a * sin_phi * sin_phi + b * b * cos_phi * cos_phi));
 
-                //float zeta = 2.0f / (kernelRadius / 2);
                 // origin overlap of sectors, think how offset the parabola is to the center
                 float zeta = _Zeta;
 
                 float zeroCross = _ZeroCrossing;
                 float sinZeroCross = sin(zeroCross);
+
                 // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
                 float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
+                
+                int quardrant;
+                float4 m[8];
+                float3 s[8];
 
                 for (quardrant = 0; quardrant < _N; ++quardrant) {
                     m[quardrant] = 0.0f;
