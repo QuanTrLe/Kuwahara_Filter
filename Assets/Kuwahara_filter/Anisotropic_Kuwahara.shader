@@ -208,14 +208,76 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                     s[quardrant] = 0.0f;
                 }
 
+                // loop to calc the std deviation and avg color of all sectors within ellipse kernel
                 [loop]
                 for (int y = -max_y; y <= max_y; ++y) {
                     [loop]
                     for (int x = -max_x; x <= max_x; ++x) {
 
-                        // eldritch magic im trying to understand
-                        float v = mul(SR, float2(x, y));
+                        // map an actual point to filter space
+                        float2 v = mul(SR, float2(x, y));
 
+                        // making sure point after mapping is within kernel radius, else skip
+                        if (dot(v, v) > 0.25f) {
+                            continue;
+                        }
+
+                        // get corresponding texel and calculate
+                        float3 color = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
+                        color = saturate(color); // clamp input between 0 and 1
+
+                        // polynomial weight calculations time wooooooo, similar to optimized general ver
+                        float sum = 0;
+                        float quardrant_weights[8];
+                        float sector_weight, vxx, vyy;
+
+                        vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
+                        vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
+                        sector_weight = max(0, v.y + v.xx); // weight positive when pixel inside leaf / weight curve
+
+                        quardrant_weights[0] = sector_weight * sector_weight; // top quardrant of kernel
+                        sum += quardrant_weights[0];
+
+                        sector_weight = max(0, -v.x + v.yy); // left quardrant of kernel
+                        quardrant_weights[2] = sector_weight * sector_weight;
+                        sum += quardrant_weights[2];
+
+                        sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
+                        quardrant_weights[4] = sector_weight * sector_weight;
+                        sum += quardrant_weights[4];
+
+                        sector_weight = max(0, v.x + vyy); // right quardrant of kernel
+                        quardrant_weights[6] = sector_weight * sector_weight;
+                        sum += quardrant_weights[6];
+
+                        // recalculating weight modifiers for quardrants rotated 45deg
+                        v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
+                        vxx = zeta - eta * v.x * v.x;
+                        vyy = zeta - eta * v.y * v.y;
+
+                        sector_weight = max(0, v.y + vxx); // north east quardrant
+                        quardrant_weights[1] = sector_weight * sector_weight;
+                        sum += quardrant_weights[1];
+
+                        sector_weight = max(0, -v.x + vyy); // south east quardrant
+                        quardrant_weights[3] = sector_weight * sector_weight;
+                        sum += quardrant_weights[3];
+
+                        sector_weight = max(0, -v.y + vxx); // south west quardrant
+                        quardrant_weights[5] = sector_weight * sector_weight;
+                        sum += quardrant_weights[5];
+
+                        sector_weight = max(0, v.x + vyy); // north west quardrant
+                        quardrant_weights[7] = sector_weight * sector_weight;
+                        sum += quardrant_weights[7];
+
+                        float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
+
+                        for (int quardrant = 0; quardrant < 8; ++quardrant) {
+                            float wk = quardrant_weights[quardrant] * g;
+                            m[quardrant] += float4(color * wk, wk);
+                            s[quardrant] += color * color * wk;
+                        }
                     }
                 }
 
