@@ -41,7 +41,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
         kuwaharaMat.SetFloat("_Hardness", hardness);
         kuwaharaMat.SetFloat("_Alpha", alpha);
         kuwaharaMat.SetFloat("_ZeroCrossing", zeroCrossing);
-        kuwaharaMat.SetFloat("_Zeta", useZeta ? zeta : 2.0f / (kernelSize / 2.0f));
+        kuwaharaMat.SetFloat("_Zeta", useZeta ? zeta : 2.0f / 2.0f / (kernelSize / 2.0f));
 
         // make a new rendertexture for how many passes we will have
         RenderTexture[] kuwaharaPasses = new RenderTexture[passes];
