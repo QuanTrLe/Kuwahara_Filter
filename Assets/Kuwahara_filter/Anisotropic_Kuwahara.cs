@@ -36,7 +36,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize); // how big the kernel is
-        kuwaharaMat.SetInt("_N", 8);
+        kuwaharaMat.SetInt("_SectorCount", 8);
         kuwaharaMat.SetFloat("_Q", sharpness);
         kuwaharaMat.SetFloat("_Hardness", hardness);
         kuwaharaMat.SetFloat("_Alpha", alpha);

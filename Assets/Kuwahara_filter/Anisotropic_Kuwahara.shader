@@ -33,7 +33,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
         #define PI 3.14159265358979323846f
         sampler2D _MainTex, _TFM;
         float4 _MainTex_TexelSize; // Vector4(1 / width, 1 / height, width, height)
-        int _KernelSize, _N, _Size;
+        int _KernelSize, _SectorCount, _Size;
         float _Hardness, _Q, _Alpha, _ZeroCrossing, _Zeta;
 
         float gaussian(float sigma, float pos) {
@@ -198,84 +198,30 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                 // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
                 float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
-                
+
                 int quardrant;
                 float4 m[8];
                 float3 s[8];
 
-                for (quardrant = 0; quardrant < _N; ++quardrant) {
+                for (quardrant = 0; quardrant < _SectorCount; ++quardrant) {
                     m[quardrant] = 0.0f;
                     s[quardrant] = 0.0f;
                 }
 
                 [loop]
-                for (int y = -kernelRadius; y <= kernelRadius; ++y) {
+                for (int y = -max_y; y <= max_y; ++y) {
                     [loop]
-                    for (int x = -kernelRadius; x <= kernelRadius; ++x) {
-                        float2 v = float2(x, y) / kernelRadius; // normalizing from pixel cords to [-1, 1]
-                        float3 c = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
-                        c = saturate(c); // saturate clamps between 0 and 1
-                        float sum = 0; // total weight for calc the final color
-                        float quardrant_weights[8]; // weight for each quardrant
-                        float sector_weight, vxx, vyy;
-                        
-                        /* Calculate Polynomial Weights */
-                        // try to think of these as thresholds of how fast the parabola weight curves
-                        vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
-                        vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
+                    for (int x = -max_x; x <= max_x; ++x) {
 
-                        /* calculating the weights of each quardrant of the 8 sector circle kernel */
-                        // the weight calculation (for ex v.y + vxx) are positive then the pixel is inside the leaf / the weight curve 
-                        sector_weight = max(0, v.y + vxx); // top quardrant of kernel
-                        quardrant_weights[0] = sector_weight * sector_weight;
-                        sum += quardrant_weights[0];
+                        // eldritch magic im trying to understand
+                        float v = mul(SR, float2(x, y));
 
-                        sector_weight = max(0, -v.x + vyy); // right quardrant of kernel
-                        quardrant_weights[2] = sector_weight * sector_weight;
-                        sum += quardrant_weights[2];
-
-                        sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
-                        quardrant_weights[4] = sector_weight * sector_weight;
-                        sum += quardrant_weights[4];
-
-                        sector_weight = max(0, v.x + vyy); // left quardrant of kernel
-                        quardrant_weights[6] = sector_weight * sector_weight;
-                        sum += quardrant_weights[6];
-
-                        /* recalculating the weight modifiers for quardrants that are rotated 45 */
-                        v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
-                        vxx = zeta - eta * v.x * v.x;
-                        vyy = zeta - eta * v.y * v.y;
-
-                        sector_weight = max(0, v.y + vxx); // north east quardrant
-                        quardrant_weights[1] = sector_weight * sector_weight;
-                        sum += quardrant_weights[1];
-
-                        sector_weight = max(0, -v.x + vyy); // south east quardrant
-                        quardrant_weights[3] = sector_weight * sector_weight;
-                        sum += quardrant_weights[3];
-
-                        sector_weight = max(0, -v.y + vxx); // south west quardrant
-                        quardrant_weights[5] = sector_weight * sector_weight;
-                        sum += quardrant_weights[5];
-
-                        sector_weight = max(0, v.x + vyy); // north west quardrant
-                        quardrant_weights[7] = sector_weight * sector_weight;
-                        sum += quardrant_weights[7];
-                        
-                        float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
-                        
-                        for (int quardrant = 0; quardrant < 8; ++quardrant) {
-                            float wk = quardrant_weights[quardrant] * g;
-                            m[quardrant] += float4(c * wk, wk);
-                            s[quardrant] += c * c * wk;
-                        }
                     }
                 }
 
                 // calculating the final color of the pixel
                 float4 output = 0;
-                for (quardrant = 0; quardrant < _N; ++quardrant) {
+                for (quardrant = 0; quardrant < _SectorCount; ++quardrant) {
                     m[quardrant].rgb /= m[quardrant].w;
                     s[quardrant] = abs(s[quardrant] / m[quardrant].w - m[quardrant].rgb * m[quardrant].rgb);
 
