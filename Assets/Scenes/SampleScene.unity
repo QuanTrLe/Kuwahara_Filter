@@ -459,7 +459,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 294a18990ce53d541b3afa49b69f623f, type: 3}
   m_Name: 
@@ -488,7 +488,7 @@ MonoBehaviour:
   zeroCrossing: 0.58
   useZeta: 0
   zeta: 0.4
-  passes: 1
+  passes: 3
 --- !u!114 &519420036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -496,13 +496,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ecc45aa0e2fa2d941adc2c782af2621b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   anisotropicKuwaharaShader: {fileID: 4800000, guid: 52eef89b6a2d70b4d8c314bcd46ce1ff, type: 3}
-  kernelSize: 10
+  kernelSize: 15
   sharpness: 18
   hardness: 20
   alpha: 1

@@ -27,7 +27,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 float4 vertex : SV_POSITION;
             };
 
-            struct QuadrantData {
+            struct SectorData {
                 float4 colors[8];
             };
 
@@ -41,7 +41,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
 
             sampler2D _MainTex;
             float4 _MainTex_TexelSize;
-            int _KernelSize, _QuadrantWeightPower;
+            int _KernelSize, _SectorWeightPower;
             float _GaussianSigma;
 
             float luminance(float3 color) {
@@ -57,8 +57,8 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
             }
 
             // Returns avg color in .rgb, variance in .a
-            QuadrantData SampleQuadrant(float2 uv, int kernelSize) {
-                QuadrantData outData;
+            SectorData SampleSector(float2 uv, int kernelSize) {
+                SectorData outData;
 
                 // constants
                 float sigma_2 = _GaussianSigma * _GaussianSigma;
@@ -90,8 +90,7 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                         float gaussian_weight = gaussian_weight_scalar * exp(-(x * x + y * y) / (2.0 * sigma_2));
 
                         // get the angle of the pixel and see if it's in the quardrant or not
-                        float pixel_angle = degrees(atan2(y, x));
-                        pixel_angle = fmod(pixel_angle + 360.0, 360.0); // since it returns -180 to 180
+                        float pixel_angle = degrees(atan2(y, x)) + 180; // atan2 returns -pi(-180) to pi(180)
                         int quadrant_num = floor(fmod(pixel_angle + 22.5, 360.0) / 45.0); // get the quadrant number to array index, 0-7
 
                         // calc all the necessary data
@@ -119,21 +118,21 @@ Shader "CustomRenderTexture/Generalized_Kuwahara" {
                 return outData;
             }
 
-            // The fragment program is where we do most of our work as to determine the color based on std deviations of the 4 quardrants
+            // The fragment program is where we do most of our work as to determine the color based on std deviations of the 8 sectors
             float4 fp(v2f i) : SV_Target {
-                // avg color and their variance of each 8 quadrance
-                QuadrantData quardrant_data = SampleQuadrant(i.uv, _KernelSize);
+                // avg color and their variance of each 8 sectors
+                SectorData sector_data = SampleSector(i.uv, _KernelSize);
 
                 float3 combined_color = 0;
                 float total_weight = 0;
 
                 [loop]
                 for (int i = 0; i < 8; i++) {
-                    float quadrant_weighting = 1.0 / (pow(0.0001 + sqrt(quardrant_data.colors[i].a), _QuadrantWeightPower));
-                    float3 quadrant_color = quardrant_data.colors[i].rgb;
+                    float sector_weighting = 1.0 / (pow(0.0001 + sqrt(sector_data.colors[i].a), _SectorWeightPower));
+                    float3 sector_color = sector_data.colors[i].rgb;
                     
-                    combined_color += quadrant_color * quadrant_weighting;
-                    total_weight += quadrant_weighting;
+                    combined_color += sector_color * sector_weighting;
+                    total_weight += sector_weighting;
                 }
 
                 return float4(combined_color / total_weight, 1.0);
