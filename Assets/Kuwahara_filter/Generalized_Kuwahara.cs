@@ -11,8 +11,8 @@ public class Generalized_Kuwahara : MonoBehaviour {
     [Range(0.1f, 10.0f)] // technically std dev in gaussian weight
     public float gaussianSigma = 5.0f;
 
-    [Range(1, 10)] // multiplication for each quadrant's weighting in the final color 
-    public int quadrantWeightPower = 6;
+    [Range(1, 10)] // multiplication for each sector's weighting in the final color 
+    public int sectorWeightPower = 6;
     
     [Range(1, 4)]
     public int passes = 1;
@@ -28,7 +28,7 @@ public class Generalized_Kuwahara : MonoBehaviour {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize);
         kuwaharaMat.SetFloat("_GaussianSigma", gaussianSigma);
-        kuwaharaMat.SetInt("_QuadrantWeightPower", quadrantWeightPower);
+        kuwaharaMat.SetInt("_SectorWeightPower", sectorWeightPower);
 
         // make a new rendertexture for how many passes we will have
         RenderTexture[] kuwaharaPasses = new RenderTexture[passes];

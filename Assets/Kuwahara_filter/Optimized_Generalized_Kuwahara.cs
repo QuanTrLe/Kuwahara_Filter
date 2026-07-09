@@ -6,7 +6,7 @@ public class Optimized_Generalized_Kuwahara : MonoBehaviour {
     public Shader generalizedKuwaharaShader;
     
     [Range(1, 20)] // circular kernel radius to use in filter
-    public int kernelSize = 1;
+    public int kernelSize = 2;
 
     [Range(1.0f, 18.0f)]
     public float sharpness = 8;
@@ -26,7 +26,7 @@ public class Optimized_Generalized_Kuwahara : MonoBehaviour {
     private Material kuwaharaMat;
     
     void OnEnable() {
-        kuwaharaMat = new Material(generalizedKuwaharaShader); // make a new temp material, sicne this is mainly testing
+        kuwaharaMat ??= new Material(generalizedKuwaharaShader); // make a new temp material, sicne this is mainly testing
         kuwaharaMat.hideFlags = HideFlags.HideAndDontSave;
     }
 

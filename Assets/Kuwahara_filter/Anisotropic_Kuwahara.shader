@@ -1,3 +1,5 @@
+// Source: https://github.com/GarrettGunnell/Post-Processing/blob/main/Assets/Kuwahara%20Filter/AnisotropicKuwahara.shader
+
 Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
     Properties {
         _MainTex ("Texture", 2D) = "white" {}
@@ -29,12 +31,12 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             return o;
         }
 
-        // vars: Q is sharpness and N is the amount of sectors in the kernel
+        // vars: renamed but for comparison reasons, Q is sharpness and N is the amount of sectors in the kernel
         #define PI 3.14159265358979323846f
-        sampler2D _MainTex, _TFM;
+        sampler2D _MainTex, _TFM; // _TFM is the eigenvectors2 (3rd) pass
         float4 _MainTex_TexelSize; // Vector4(1 / width, 1 / height, width, height)
-        int _KernelSize, _N, _Size;
-        float _Hardness, _Q, _Alpha, _ZeroCrossing, _Zeta;
+        int _KernelSize, _SectorCount, _Size;
+        float _Hardness, _Sharpness, _Alpha, _ZeroCrossing, _Zeta;
 
         float gaussian(float sigma, float pos) {
             return (1.0f / sqrt(2.0f * PI * sigma * sigma)) * exp(-(pos * pos) / (2.0f * sigma * sigma));
@@ -53,22 +55,22 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                 // horizontal sobel operator with normalization
                 float3 Sx = (
-                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
-                    2.0 * tex2D(_MainTex, i.uv + float2(-d.x, 0.0)).rgb +
-                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
-                    -2.0 * tex2D(_MainTex, i.uv + float2(d.x, 0.0)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
+                    1.0f * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
+                    2.0f * tex2D(_MainTex, i.uv + float2(-d.x, 0.0)).rgb +
+                    1.0f * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
+                    -2.0f * tex2D(_MainTex, i.uv + float2(d.x, 0.0)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
                 ) / 4.0f;
 
                 // vertical sobel operator
                 float3 Sy = (
-                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
-                    2.0 * tex2D(_MainTex, i.uv + float2(0.0, -d.y)).rgb +
-                    1.0 * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
-                    -2.0 * tex2D(_MainTex, i.uv + float2(0.0, d.y)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb
+                    1.0f * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
+                    2.0f * tex2D(_MainTex, i.uv + float2(0.0, -d.y)).rgb +
+                    1.0f * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
+                    -2.0f * tex2D(_MainTex, i.uv + float2(0.0, d.y)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
                 ) / 4.0f;
 
                 // data needed for the structure tensor matrix
@@ -91,7 +93,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float kernelSum = 0.0f;
 
                 // go over the row and get the texel at the point + the gaussian weighted of it
-                for (int x = -kernelRadius; x <= kernelRadius; x++) {
+                for (int x = -kernelRadius; x <= kernelRadius; ++x) {
                     float4 c = tex2D(_MainTex, i.uv + float2(x, 0) * _MainTex_TexelSize.xy);
                     float gauss = gaussian(2.0f, x);
 
@@ -120,7 +122,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float kernelSum = 0.0f;
 
                 // go over the column and get the texel at the point + the gaussian weighted of it
-                for (int y = -kernelRadius; y <= kernelRadius; y++) {
+                for (int y = -kernelRadius; y <= kernelRadius; ++y) {
                     float4 c = tex2D(_MainTex, i.uv + float2(0, y) * _MainTex_TexelSize.xy);
                     float gauss = gaussian(2.0f, y);
 
@@ -149,6 +151,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 if (lambda1 + lambda2 > 0.0f) {
                     Anisotropy = (lambda1 - lambda2) / (lambda1 + lambda2);
                 }
+                // float A = (lambda1 + lambda2 > 0.0f) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0.0f;
 
                 return float4(t, phi, Anisotropy);
             }
@@ -186,97 +189,108 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 // complete matrix for controlling ellipse
                 float2x2 SR = mul(S, R);
 
-                int quardrant;
-                float4 m[8];
-                float3 s[8];
+                // bounds of the ellipse to check pixels for
+                int max_x = int(sqrt(a * a * cos_phi * cos_phi + b * b * sin_phi * sin_phi));
+                int max_y = int(sqrt(a * a * sin_phi * sin_phi + b * b * cos_phi * cos_phi));
 
-                //float zeta = 2.0f / (kernelRadius / 2);
                 // origin overlap of sectors, think how offset the parabola is to the center
                 float zeta = _Zeta;
 
                 float zeroCross = _ZeroCrossing;
                 float sinZeroCross = sin(zeroCross);
+
                 // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
                 float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
 
-                for (quardrant = 0; quardrant < _N; ++quardrant) {
+                int quardrant;
+                float4 m[8];
+                float3 s[8];
+
+                for (quardrant = 0; quardrant < _SectorCount; ++quardrant) {
                     m[quardrant] = 0.0f;
                     s[quardrant] = 0.0f;
                 }
 
+                // loop to calc the std deviation and avg color of all sectors within ellipse kernel
                 [loop]
-                for (int y = -kernelRadius; y <= kernelRadius; ++y) {
+                for (int y = -max_y; y <= max_y; ++y) {
                     [loop]
-                    for (int x = -kernelRadius; x <= kernelRadius; ++x) {
-                        float2 v = float2(x, y) / kernelRadius; // normalizing from pixel cords to [-1, 1]
-                        float3 c = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
-                        c = saturate(c); // saturate clamps between 0 and 1
-                        float sum = 0; // total weight for calc the final color
-                        float quardrant_weights[8]; // weight for each quardrant
-                        float sector_weight, vxx, vyy;
-                        
-                        /* Calculate Polynomial Weights */
-                        // try to think of these as thresholds of how fast the parabola weight curves
-                        vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
-                        vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
+                    for (int x = -max_x; x <= max_x; ++x) {
 
-                        /* calculating the weights of each quardrant of the 8 sector circle kernel */
-                        // the weight calculation (for ex v.y + vxx) are positive then the pixel is inside the leaf / the weight curve 
-                        sector_weight = max(0, v.y + vxx); // top quardrant of kernel
-                        quardrant_weights[0] = sector_weight * sector_weight;
-                        sum += quardrant_weights[0];
+                        // map an actual point to filter space
+                        float2 v = mul(SR, float2(x, y));
 
-                        sector_weight = max(0, -v.x + vyy); // right quardrant of kernel
-                        quardrant_weights[2] = sector_weight * sector_weight;
-                        sum += quardrant_weights[2];
+                        // making sure point after mapping is within kernel radius, else skip
+                        if (dot(v, v) <= 0.25f) {
+                           
+                            // get corresponding texel and calculate
+                            float3 color = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
+                            color = saturate(color); // clamp input between 0 and 1
 
-                        sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
-                        quardrant_weights[4] = sector_weight * sector_weight;
-                        sum += quardrant_weights[4];
+                            // polynomial weight calculations time wooooooo, similar to optimized general ver
+                            float sum = 0;
+                            float quardrant_weights[8];
+                            float sector_weight, vxx, vyy;
 
-                        sector_weight = max(0, v.x + vyy); // left quardrant of kernel
-                        quardrant_weights[6] = sector_weight * sector_weight;
-                        sum += quardrant_weights[6];
+                            vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
+                            vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
+                            sector_weight = max(0, v.y + v.xx); // weight positive when pixel inside leaf / weight curve
 
-                        /* recalculating the weight modifiers for quardrants that are rotated 45 */
-                        v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
-                        vxx = zeta - eta * v.x * v.x;
-                        vyy = zeta - eta * v.y * v.y;
+                            quardrant_weights[0] = sector_weight * sector_weight; // top quardrant of kernel
+                            sum += quardrant_weights[0];
 
-                        sector_weight = max(0, v.y + vxx); // north east quardrant
-                        quardrant_weights[1] = sector_weight * sector_weight;
-                        sum += quardrant_weights[1];
+                            sector_weight = max(0, -v.x + v.yy); // left quardrant of kernel
+                            quardrant_weights[2] = sector_weight * sector_weight;
+                            sum += quardrant_weights[2];
 
-                        sector_weight = max(0, -v.x + vyy); // south east quardrant
-                        quardrant_weights[3] = sector_weight * sector_weight;
-                        sum += quardrant_weights[3];
+                            sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
+                            quardrant_weights[4] = sector_weight * sector_weight;
+                            sum += quardrant_weights[4];
 
-                        sector_weight = max(0, -v.y + vxx); // south west quardrant
-                        quardrant_weights[5] = sector_weight * sector_weight;
-                        sum += quardrant_weights[5];
+                            sector_weight = max(0, v.x + vyy); // right quardrant of kernel
+                            quardrant_weights[6] = sector_weight * sector_weight;
+                            sum += quardrant_weights[6];
 
-                        sector_weight = max(0, v.x + vyy); // north west quardrant
-                        quardrant_weights[7] = sector_weight * sector_weight;
-                        sum += quardrant_weights[7];
-                        
-                        float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
-                        
-                        for (int quardrant = 0; quardrant < 8; ++quardrant) {
-                            float wk = quardrant_weights[quardrant] * g;
-                            m[quardrant] += float4(c * wk, wk);
-                            s[quardrant] += c * c * wk;
+                            // recalculating weight modifiers for quardrants rotated 45deg
+                            v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
+                            vxx = zeta - eta * v.x * v.x;
+                            vyy = zeta - eta * v.y * v.y;
+
+                            sector_weight = max(0, v.y + vxx); // north east quardrant
+                            quardrant_weights[1] = sector_weight * sector_weight;
+                            sum += quardrant_weights[1];
+
+                            sector_weight = max(0, -v.x + vyy); // south east quardrant
+                            quardrant_weights[3] = sector_weight * sector_weight;
+                            sum += quardrant_weights[3];
+
+                            sector_weight = max(0, -v.y + vxx); // south west quardrant
+                            quardrant_weights[5] = sector_weight * sector_weight;
+                            sum += quardrant_weights[5];
+
+                            sector_weight = max(0, v.x + vyy); // north west quardrant
+                            quardrant_weights[7] = sector_weight * sector_weight;
+                            sum += quardrant_weights[7];
+
+                            float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
+
+                            for (int quardrant = 0; quardrant < 8; ++quardrant) {
+                                float wk = quardrant_weights[quardrant] * g;
+                                m[quardrant] += float4(color * wk, wk);
+                                s[quardrant] += color * color * wk;
+                            }
                         }
                     }
                 }
 
                 // calculating the final color of the pixel
                 float4 output = 0;
-                for (quardrant = 0; quardrant < _N; ++quardrant) {
+                for (quardrant = 0; quardrant < _SectorCount; ++quardrant) {
                     m[quardrant].rgb /= m[quardrant].w;
                     s[quardrant] = abs(s[quardrant] / m[quardrant].w - m[quardrant].rgb * m[quardrant].rgb);
 
                     float sigma2 = s[quardrant].r + s[quardrant].g + s[quardrant].b;
-                    float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Q));
+                    float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Sharpness));
 
                     output += float4(m[quardrant].rgb * w, w);
                 }
