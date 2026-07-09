@@ -1,11 +1,13 @@
+// Source: https://github.com/GarrettGunnell/Post-Processing/blob/main/Assets/Kuwahara%20Filter/AnisotropicKuwahara.cs
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Anisotropic_Kuwahara : MonoBehaviour {
-    public Shader anisotropicKuwaharaShader;
+    public Shader kuwaharaShader;
     
-    [Range(1, 20)] // circular kernel radius to use in filter
+    [Range(2, 20)] // circular kernel radius to use in filter
     public int kernelSize = 2;
 
     [Range(1.0f, 18.0f)]
@@ -29,7 +31,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
     private Material kuwaharaMat;
     
     void OnEnable() {
-        kuwaharaMat = new Material(anisotropicKuwaharaShader); // make a new temp material, sicne this is mainly testing
+        kuwaharaMat = new Material(kuwaharaShader); // make a new temp material, sicne this is mainly testing
         kuwaharaMat.hideFlags = HideFlags.HideAndDontSave;
     }
 

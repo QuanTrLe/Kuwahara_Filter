@@ -1,3 +1,5 @@
+// Source: https://github.com/GarrettGunnell/Post-Processing/blob/main/Assets/Kuwahara%20Filter/AnisotropicKuwahara.shader
+
 Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
     Properties {
         _MainTex ("Texture", 2D) = "white" {}
@@ -29,12 +31,12 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
             return o;
         }
 
-        // vars: Q is sharpness and N is the amount of sectors in the kernel
+        // vars: renamed but for comparison reasons, Q is sharpness and N is the amount of sectors in the kernel
         #define PI 3.14159265358979323846f
-        sampler2D _MainTex, _TFM;
+        sampler2D _MainTex, _TFM; // _TFM is the eigenvectors2 (3rd) pass
         float4 _MainTex_TexelSize; // Vector4(1 / width, 1 / height, width, height)
         int _KernelSize, _SectorCount, _Size;
-        float _Hardness, _Q, _Alpha, _ZeroCrossing, _Zeta;
+        float _Hardness, _Sharpness, _Alpha, _ZeroCrossing, _Zeta;
 
         float gaussian(float sigma, float pos) {
             return (1.0f / sqrt(2.0f * PI * sigma * sigma)) * exp(-(pos * pos) / (2.0f * sigma * sigma));
@@ -53,22 +55,22 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                 // horizontal sobel operator with normalization
                 float3 Sx = (
-                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
-                    2.0 * tex2D(_MainTex, i.uv + float2(-d.x, 0.0)).rgb +
-                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
-                    -2.0 * tex2D(_MainTex, i.uv + float2(d.x, 0.0)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
+                    1.0f * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
+                    2.0f * tex2D(_MainTex, i.uv + float2(-d.x, 0.0)).rgb +
+                    1.0f * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
+                    -2.0f * tex2D(_MainTex, i.uv + float2(d.x, 0.0)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
                 ) / 4.0f;
 
                 // vertical sobel operator
                 float3 Sy = (
-                    1.0 * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
-                    2.0 * tex2D(_MainTex, i.uv + float2(0.0, -d.y)).rgb +
-                    1.0 * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
-                    -2.0 * tex2D(_MainTex, i.uv + float2(0.0, d.y)).rgb +
-                    -1.0 * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb
+                    1.0f * tex2D(_MainTex, i.uv + float2(-d.x, -d.y)).rgb +
+                    2.0f * tex2D(_MainTex, i.uv + float2(0.0, -d.y)).rgb +
+                    1.0f * tex2D(_MainTex, i.uv + float2(d.x, -d.y)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(-d.x, d.y)).rgb +
+                    -2.0f * tex2D(_MainTex, i.uv + float2(0.0, d.y)).rgb +
+                    -1.0f * tex2D(_MainTex, i.uv + float2(d.x, d.y)).rgb
                 ) / 4.0f;
 
                 // data needed for the structure tensor matrix
@@ -288,7 +290,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                     s[quardrant] = abs(s[quardrant] / m[quardrant].w - m[quardrant].rgb * m[quardrant].rgb);
 
                     float sigma2 = s[quardrant].r + s[quardrant].g + s[quardrant].b;
-                    float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Q));
+                    float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Sharpness));
 
                     output += float4(m[quardrant].rgb * w, w);
                 }
