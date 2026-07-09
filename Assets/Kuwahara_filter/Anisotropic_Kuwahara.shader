@@ -93,7 +93,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float kernelSum = 0.0f;
 
                 // go over the row and get the texel at the point + the gaussian weighted of it
-                for (int x = -kernelRadius; x <= kernelRadius; x++) {
+                for (int x = -kernelRadius; x <= kernelRadius; ++x) {
                     float4 c = tex2D(_MainTex, i.uv + float2(x, 0) * _MainTex_TexelSize.xy);
                     float gauss = gaussian(2.0f, x);
 
@@ -122,7 +122,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float kernelSum = 0.0f;
 
                 // go over the column and get the texel at the point + the gaussian weighted of it
-                for (int y = -kernelRadius; y <= kernelRadius; y++) {
+                for (int y = -kernelRadius; y <= kernelRadius; ++y) {
                     float4 c = tex2D(_MainTex, i.uv + float2(0, y) * _MainTex_TexelSize.xy);
                     float gauss = gaussian(2.0f, y);
 

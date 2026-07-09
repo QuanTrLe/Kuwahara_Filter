@@ -69,6 +69,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
             Graphics.Blit(kuwaharaPasses[i - 1], kuwaharaPasses[i], kuwaharaMat, 3);
         }
         Graphics.Blit(kuwaharaPasses[passes - 1], destination);
+        // Graphics.Blit(eigenvectors1, destination);
 
         RenderTexture.ReleaseTemporary(structureTensor);
         RenderTexture.ReleaseTemporary(eigenvectors1);
