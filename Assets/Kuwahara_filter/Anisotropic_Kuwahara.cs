@@ -39,7 +39,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize); // how big the kernel is
         kuwaharaMat.SetInt("_SectorCount", 8);
-        kuwaharaMat.SetFloat("_Q", sharpness);
+        kuwaharaMat.SetFloat("_Sharpness", sharpness);
         kuwaharaMat.SetFloat("_Hardness", hardness);
         kuwaharaMat.SetFloat("_Alpha", alpha);
         kuwaharaMat.SetFloat("_ZeroCrossing", zeroCrossing);
@@ -69,7 +69,7 @@ public class Anisotropic_Kuwahara : MonoBehaviour {
             Graphics.Blit(kuwaharaPasses[i - 1], kuwaharaPasses[i], kuwaharaMat, 3);
         }
         Graphics.Blit(kuwaharaPasses[passes - 1], destination);
-        // Graphics.Blit(eigenvectors1, destination);
+        // Graphics.Blit(eigenvectors2, destination);
 
         RenderTexture.ReleaseTemporary(structureTensor);
         RenderTexture.ReleaseTemporary(eigenvectors1);

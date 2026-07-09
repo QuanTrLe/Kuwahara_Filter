@@ -135,10 +135,12 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float3 g = col.rgb / kernelSum;
 
                 // lambda calculatuions for eigen vector that points in dir of minimal change
-                float sum_eg = g.y + g.x;
-                float inner_sqrt = sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z);
-                float lambda1 = 0.5f * (sum_eg + inner_sqrt);
-                float lambda2 = 0.5f * (sum_eg - inner_sqrt);
+                // float sum_eg = g.y + g.x;
+                // float inner_sqrt = sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z);
+                // float lambda1 = 0.5f * (sum_eg + inner_sqrt);
+                // float lambda2 = 0.5f * (sum_eg - inner_sqrt);
+                float lambda1 = 0.5f * (g.y + g.x + sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z));
+                float lambda2 = 0.5f * (g.y + g.x - sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z));
 
                 // eigenvector directed in dir of min change
                 float v = float2(lambda1 - g.x, -g.z);
@@ -151,6 +153,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 if (lambda1 + lambda2 > 0.0f) {
                     Anisotropy = (lambda1 - lambda2) / (lambda1 + lambda2);
                 }
+                // float A = (lambda1 + lambda2 > 0.0f) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0.0f;
 
                 return float4(t, phi, Anisotropy);
             }
@@ -220,65 +223,64 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                         float2 v = mul(SR, float2(x, y));
 
                         // making sure point after mapping is within kernel radius, else skip
-                        if (dot(v, v) > 0.25f) {
-                            continue;
-                        }
+                        if (dot(v, v) <= 0.25f) {
+                           
+                            // get corresponding texel and calculate
+                            float3 color = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
+                            color = saturate(color); // clamp input between 0 and 1
 
-                        // get corresponding texel and calculate
-                        float3 color = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
-                        color = saturate(color); // clamp input between 0 and 1
+                            // polynomial weight calculations time wooooooo, similar to optimized general ver
+                            float sum = 0;
+                            float quardrant_weights[8];
+                            float sector_weight, vxx, vyy;
 
-                        // polynomial weight calculations time wooooooo, similar to optimized general ver
-                        float sum = 0;
-                        float quardrant_weights[8];
-                        float sector_weight, vxx, vyy;
+                            vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
+                            vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
+                            sector_weight = max(0, v.y + v.xx); // weight positive when pixel inside leaf / weight curve
 
-                        vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
-                        vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
-                        sector_weight = max(0, v.y + v.xx); // weight positive when pixel inside leaf / weight curve
+                            quardrant_weights[0] = sector_weight * sector_weight; // top quardrant of kernel
+                            sum += quardrant_weights[0];
 
-                        quardrant_weights[0] = sector_weight * sector_weight; // top quardrant of kernel
-                        sum += quardrant_weights[0];
+                            sector_weight = max(0, -v.x + v.yy); // left quardrant of kernel
+                            quardrant_weights[2] = sector_weight * sector_weight;
+                            sum += quardrant_weights[2];
 
-                        sector_weight = max(0, -v.x + v.yy); // left quardrant of kernel
-                        quardrant_weights[2] = sector_weight * sector_weight;
-                        sum += quardrant_weights[2];
+                            sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
+                            quardrant_weights[4] = sector_weight * sector_weight;
+                            sum += quardrant_weights[4];
 
-                        sector_weight = max(0, -v.y + vxx); // bottom quardrant of kernel 
-                        quardrant_weights[4] = sector_weight * sector_weight;
-                        sum += quardrant_weights[4];
+                            sector_weight = max(0, v.x + vyy); // right quardrant of kernel
+                            quardrant_weights[6] = sector_weight * sector_weight;
+                            sum += quardrant_weights[6];
 
-                        sector_weight = max(0, v.x + vyy); // right quardrant of kernel
-                        quardrant_weights[6] = sector_weight * sector_weight;
-                        sum += quardrant_weights[6];
+                            // recalculating weight modifiers for quardrants rotated 45deg
+                            v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
+                            vxx = zeta - eta * v.x * v.x;
+                            vyy = zeta - eta * v.y * v.y;
 
-                        // recalculating weight modifiers for quardrants rotated 45deg
-                        v = sqrt(2.0f) / 2.0f * float2(v.x - v.y, v.x + v.y);
-                        vxx = zeta - eta * v.x * v.x;
-                        vyy = zeta - eta * v.y * v.y;
+                            sector_weight = max(0, v.y + vxx); // north east quardrant
+                            quardrant_weights[1] = sector_weight * sector_weight;
+                            sum += quardrant_weights[1];
 
-                        sector_weight = max(0, v.y + vxx); // north east quardrant
-                        quardrant_weights[1] = sector_weight * sector_weight;
-                        sum += quardrant_weights[1];
+                            sector_weight = max(0, -v.x + vyy); // south east quardrant
+                            quardrant_weights[3] = sector_weight * sector_weight;
+                            sum += quardrant_weights[3];
 
-                        sector_weight = max(0, -v.x + vyy); // south east quardrant
-                        quardrant_weights[3] = sector_weight * sector_weight;
-                        sum += quardrant_weights[3];
+                            sector_weight = max(0, -v.y + vxx); // south west quardrant
+                            quardrant_weights[5] = sector_weight * sector_weight;
+                            sum += quardrant_weights[5];
 
-                        sector_weight = max(0, -v.y + vxx); // south west quardrant
-                        quardrant_weights[5] = sector_weight * sector_weight;
-                        sum += quardrant_weights[5];
+                            sector_weight = max(0, v.x + vyy); // north west quardrant
+                            quardrant_weights[7] = sector_weight * sector_weight;
+                            sum += quardrant_weights[7];
 
-                        sector_weight = max(0, v.x + vyy); // north west quardrant
-                        quardrant_weights[7] = sector_weight * sector_weight;
-                        sum += quardrant_weights[7];
+                            float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
 
-                        float g = exp(-3.125f * dot(v,v)) / sum; // radial falloff for the weight
-
-                        for (int quardrant = 0; quardrant < 8; ++quardrant) {
-                            float wk = quardrant_weights[quardrant] * g;
-                            m[quardrant] += float4(color * wk, wk);
-                            s[quardrant] += color * color * wk;
+                            for (int quardrant = 0; quardrant < 8; ++quardrant) {
+                                float wk = quardrant_weights[quardrant] * g;
+                                m[quardrant] += float4(color * wk, wk);
+                                s[quardrant] += color * color * wk;
+                            }
                         }
                     }
                 }
