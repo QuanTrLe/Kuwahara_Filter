@@ -135,12 +135,10 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float3 g = col.rgb / kernelSum;
 
                 // lambda calculatuions for eigen vector that points in dir of minimal change
-                // float sum_eg = g.y + g.x;
-                // float inner_sqrt = sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z);
-                // float lambda1 = 0.5f * (sum_eg + inner_sqrt);
-                // float lambda2 = 0.5f * (sum_eg - inner_sqrt);
-                float lambda1 = 0.5f * (g.y + g.x + sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z));
-                float lambda2 = 0.5f * (g.y + g.x - sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z));
+                float sum_eg = g.y + g.x;
+                float inner_sqrt = sqrt(g.y * g.y - 2.0f * g.x * g.y + g.x * g.x + 4.0f * g.z * g.z);
+                float lambda1 = 0.5f * (sum_eg + inner_sqrt);
+                float lambda2 = 0.5f * (sum_eg - inner_sqrt);
 
                 // eigenvector directed in dir of min change
                 float v = float2(lambda1 - g.x, -g.z);
