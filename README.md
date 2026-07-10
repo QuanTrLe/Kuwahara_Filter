@@ -21,6 +21,8 @@ While the filter is easy to implement, there's also a lot of drawbacks with the 
 ### Generalized Kuwahara Filter
 To fix the stylization issues of the previous version, the generalized kuwahara filter instead uses a circular kernel shape, along with Gaussian weighting for the colors from each sector instead of just choosing one. The circular kernel is divided into 8 sections instead of 4 like before, making it so that the filter is much more versatile to be able to adapt to the finer details of the image instead of colors being clumped into square shapes as before. This effect is much more noticeable when looking at hair or fine details as such. This version also uses a gaussian weight and take into account the colors of all sections instead of just choosing one section. This is done by using the inverse of the color deviation of the section, making it so that the higher the deviation of the section, the lower the weight the section will have when it comes to the final color calculation. As a result, the filter is again more adaptable to the image and the patches of color blends better too.
 
+![alt text][generalized_kernel]
+
 However, this version of the filter does have two glaring issues. First of which, is the performance. Specifically, when we do the calculations for one pixel, we would be doing a gaussian weight for each of the section of the kernel around it. This would come up to 8 gaussian weights per pixel and the performance would only get worse the larger the kernel size becomes because there would be more pixels per weight calculation. To fix the issue of the performance, the Anisotropic Kuwahara filter did propose to use a polynomial weighting for each sector instead of using gaussian weighting. This would drastically reduce the time taken for the filter to calculate thanks to the elimination of square roots in the equation while allowing the visual aspects to remain relatively the same. For my current implementation of the polynomial weighting version, it requires 2 passes instead of 1 to be able to achieve the same visual results of the generalized one. The 2 passes results in an average 4.5 fps for me and 8.5 if it only does 1 pass, which is still, technically, an improvement over 3fps of the original generalized version.    
 
 ![alt text][polynomial_approx_weighting]
@@ -42,6 +44,7 @@ Workings of the anisotropic Kuwahara filter
 7. [Ellipse Wikipedia](https://en.wikipedia.org/wiki/Ellipse)
 
 [kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "Basic Kuwahara Filter Kernel: From [7]"
+[generalized_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kernel.png "Generalized Kuwahara Filter Kernel: From [2]"
 [polynomial_approx_weighting]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Polynomial_approx_weighting.png "Polynomial Weighting Approximation: From [3]"
 [basic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Basic_kuwahara_filter_output.png "Basic Kuwahara Filter Output"
 [generalized_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kuwahara_filter_output.png "Generalized Kuwahara Filter Output"
