@@ -23,9 +23,9 @@ To fix the stylization issues of the previous version, the generalized kuwahara 
 
 However, this version of the filter does have two glaring issues. First of which, is the performance. Specifically, when we do the calculations for one pixel, we would be doing a gaussian weight for each of the section of the kernel around it. This would come up to 8 gaussian weights per pixel and the performance would only get worse the larger the kernel size becomes because there would be more pixels per weight calculation. Another issue is that while the stylization is definitely an improvement compared to the basic version of the filter, this version still fails when it comes to extreme angles or details, due to our set kernel size. As Acerola said in his video, it's like trying to paint a painting with only a single brush size. 
 
-*Talk about the optimzied ver here
+To fix the issue of the performance, the Anisotropic Kuwahara filter did propose to use a polynomial weighting for each sector instead of using gaussian weighting. This would drastically reduce the time taken for the filter to calculate thanks to the elimination of square roots in the equation while allowing the visual aspects to remain relatively the same. For my current implementation of the polynomial weighting version, it requires 2 passes instead of 1 to be able to achieve the same visual results of the generalized one. The 2 passes results in an average 4.5 fps for me and 8.5 if it only does 1 pass, which is still, technically, an improvement over 3fps of the original generalized version.    
 
-*Insert image of test img and two vers here
+![alt text][polynomial_approx_weighting]
 
 ### Anisotropic Kuwahara Filter
 Workings of the anisotropic Kuwahara filter
@@ -39,4 +39,5 @@ Workings of the anisotropic Kuwahara filter
 6. [Kuwahara Filter Wikipedia](https://en.wikipedia.org/wiki/Kuwahara_filter) 
 7. [Ellipse Wikipedia](https://en.wikipedia.org/wiki/Ellipse)
 
-[kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "[Basic Kuwahara Filter Kernel](https://en.wikipedia.org/wiki/Kuwahara_filter)"
+[kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "Basic Kuwahara Filter Kernel: From [7]"
+[polynomial_approx_weighting]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Polynomial_approx_weighting.png "Polynomial Weighting Approximation: From [3]"
