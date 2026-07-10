@@ -16,10 +16,16 @@ The basic Kuwahara filter works by taking a pixel and a square kernel around it.
 
 While the filter is easy to implement, there's also a lot of drawbacks with the most basic version, mainly due to the shape of the kernel and the way that it calculates the color after the inspection of the kernel sections. Since the square kernels creates blocky artefact it's not fully good enough if our aim is to simulate painting strokes. Additionally, the pixel colors are also vulnerable to regions with small changes since the filter only chooses the average color of one section. A note outside of this is that if two sections have the same standard deviation in color, the pixel color can also flicker and be unpredictable when those two sections happen to have different mean colors despite the same color standard deviation. To fix this you can do something simple as taking the average of the colors from the sectors that have the minimum deviation.
 
+* Insert output image compared to test image here
+
 ### Generalized Kuwahara Filter
 To fix the stylization issues of the previous version, the generalized kuwahara filter instead uses a circular kernel shape, along with Gaussian weighting for the colors from each sector instead of just choosing one. The circular kernel is divided into 8 sections instead of 4 like before, making it so that the filter is much more versatile to be able to adapt to the finer details of the image instead of colors being clumped into square shapes as before. This effect is much more noticeable when looking at hair or fine details as such. This version also uses a gaussian weight and take into account the colors of all sections instead of just choosing one section. This is done by using the inverse of the color deviation of the section, making it so that the higher the deviation of the section, the lower the weight the section will have when it comes to the final color calculation. As a result, the filter is again more adaptable to the image and the patches of color blends better too.
 
 However, this version of the filter does have two glaring issues. First of which, is the performance. Specifically, when we do the calculations for one pixel, we would be doing a gaussian weight for each of the section of the kernel around it. This would come up to 8 gaussian weights per pixel and the performance would only get worse the larger the kernel size becomes because there would be more pixels per weight calculation. Another issue is that while the stylization is definitely an improvement compared to the basic version of the filter, this version still fails when it comes to extreme angles or details, due to our set kernel size. As Acerola said in his video, it's like trying to paint a painting with only a single brush size. 
+
+*Talk about the optimzied ver here
+
+*Insert image of test img and two vers here
 
 ### Anisotropic Kuwahara Filter
 Workings of the anisotropic Kuwahara filter
