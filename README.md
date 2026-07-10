@@ -27,7 +27,7 @@ However, this version of the filter does have two glaring issues. First of which
 
 Another issue is that while the stylization is definitely an improvement compared to the basic version of the filter, this version still fails when it comes to extreme angles, due to our set kernel size. As Acerola said in his video, it's like trying to paint a painting with only a single brush size. This issue can also pop up when the image has fine details that is too small for the filter to handle gracefully, such as an eyelash, fingertips, or hair.
 
-*Output of all here
+![alt text][generalized_filter_output]
 
 ### Anisotropic Kuwahara Filter
 Workings of the anisotropic Kuwahara filter
@@ -44,3 +44,4 @@ Workings of the anisotropic Kuwahara filter
 [kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "Basic Kuwahara Filter Kernel: From [7]"
 [polynomial_approx_weighting]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Polynomial_approx_weighting.png "Polynomial Weighting Approximation: From [3]"
 [basic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Basic_kuwahara_filter_output.png "Basic Kuwahara Filter Output"
+[generalized_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kuwahara_filter_output.png "Generalized Kuwahara Filter Output"
