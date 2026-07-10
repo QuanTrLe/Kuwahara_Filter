@@ -141,9 +141,9 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 float lambda2 = 0.5f * (sum_eg - inner_sqrt);
 
                 // eigenvector directed in dir of min change
-                float v = float2(lambda1 - g.x, -g.z);
+                float2 v = float2(lambda1 - g.x, -g.z);
                 float2 t = length(v) > 0.0 ? normalize(v) : float2(0.0f, 1.0f);
-                float phi = -atan2(t.y, t.x); // local orientation
+                float phi = -atan2(t.y, t.x);
 
                 
                 // the anisotropy
