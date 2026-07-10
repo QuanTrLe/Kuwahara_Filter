@@ -35,8 +35,8 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
         #define PI 3.14159265358979323846f
         sampler2D _MainTex, _K0;
         float4 _MainTex_TexelSize;
-        int _KernelSize, _N, _Size;
-        float _Hardness, _Q, _ZeroCrossing, _Zeta;
+        int _KernelSize, _SectorCount, _Size;
+        float _Hardness, _Sharpness, _ZeroCrossing, _Zeta;
 
         ENDCG
 
@@ -61,7 +61,7 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                 // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
                 float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
 
-                for (sector = 0; sector < _N; ++sector) {
+                for (sector = 0; sector < _SectorCount; ++sector) {
                     m[sector] = 0.0f;
                     s[sector] = 0.0f;
                 }
@@ -70,9 +70,12 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                 for (int y = -kernelRadius; y <= kernelRadius; ++y) {
                     [loop]
                     for (int x = -kernelRadius; x <= kernelRadius; ++x) {
+
                         float2 v = float2(x, y) / kernelRadius; // normalizing from pixel cords to [-1, 1]
-                        float3 c = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
-                        c = saturate(c); // saturate clamps between 0 and 1
+
+                        float3 color = tex2D(_MainTex, i.uv + float2(x, y) * _MainTex_TexelSize.xy).rgb;
+                        color = saturate(color); // saturate clamps between 0 and 1
+
                         float sum = 0; // total weight for calc the final color
                         float sector_weights[8]; // weight for each quardrant
                         float current_weight, vxx, vyy;
@@ -125,20 +128,20 @@ Shader "CustomRenderTexture/Optimized_Generalized_Kuwahara" {
                         
                         for (int quardrant = 0; quardrant < 8; ++quardrant) {
                             float wk = sector_weights[quardrant] * g;
-                            m[quardrant] += float4(c * wk, wk);
-                            s[quardrant] += c * c * wk;
+                            m[quardrant] += float4(color * wk, wk);
+                            s[quardrant] += color * color * wk;
                         }
                     }
                 }
 
                 // calculating the final color of the pixel
                 float4 output = 0;
-                for (sector = 0; sector < _N; ++sector) {
+                for (sector = 0; sector < _SectorCount; ++sector) {
                     m[sector].rgb /= m[sector].w;
                     s[sector] = abs(s[sector] / m[sector].w - m[sector].rgb * m[sector].rgb);
 
                     float sigma2 = s[sector].r + s[sector].g + s[sector].b;
-                    float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Q));
+                    float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Sharpness));
 
                     output += float4(m[sector].rgb * w, w);
                 }
