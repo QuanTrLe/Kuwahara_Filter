@@ -33,8 +33,8 @@ public class Optimized_Generalized_Kuwahara : MonoBehaviour {
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
         // set all the variables of the shader we've had above from the editor 
         kuwaharaMat.SetInt("_KernelSize", kernelSize);
-        kuwaharaMat.SetInt("_N", 8);
-        kuwaharaMat.SetFloat("_Q", sharpness);
+        kuwaharaMat.SetInt("_SectorCount", 8);
+        kuwaharaMat.SetFloat("_Sharpness", sharpness);
         kuwaharaMat.SetFloat("_Hardness", hardness);
         kuwaharaMat.SetFloat("_ZeroCrossing", zeroCrossing);
         kuwaharaMat.SetFloat("_Zeta", useZeta ? zeta : 2.0f / (kernelSize / 2.0f));
