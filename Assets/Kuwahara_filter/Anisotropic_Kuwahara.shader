@@ -74,7 +74,7 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 ) / 4.0f;
 
                 // data needed for the structure tensor matrix
-                return float4(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy), 1.0);
+                return float4(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy), 1.0f);
             }
 
             ENDCG
@@ -151,7 +151,6 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 if (lambda1 + lambda2 > 0.0f) {
                     Anisotropy = (lambda1 - lambda2) / (lambda1 + lambda2);
                 }
-                // float A = (lambda1 + lambda2 > 0.0f) ? (lambda1 - lambda2) / (lambda1 + lambda2) : 0.0f;
 
                 return float4(t, phi, Anisotropy);
             }
@@ -202,13 +201,13 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
                 // boundary overlap of sectors, the higher eta is the more quickly the parabola weight curves towards the side
                 float eta = (zeta + cos(zeroCross)) / (sinZeroCross * sinZeroCross);
 
-                int quardrant;
+                int sector;
                 float4 m[8];
                 float3 s[8];
 
-                for (quardrant = 0; quardrant < _SectorCount; ++quardrant) {
-                    m[quardrant] = 0.0f;
-                    s[quardrant] = 0.0f;
+                for (sector = 0; sector < _SectorCount; ++sector) {
+                    m[sector] = 0.0f;
+                    s[sector] = 0.0f;
                 }
 
                 // loop to calc the std deviation and avg color of all sectors within ellipse kernel
@@ -285,14 +284,14 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                 // calculating the final color of the pixel
                 float4 output = 0;
-                for (quardrant = 0; quardrant < _SectorCount; ++quardrant) {
-                    m[quardrant].rgb /= m[quardrant].w;
-                    s[quardrant] = abs(s[quardrant] / m[quardrant].w - m[quardrant].rgb * m[quardrant].rgb);
+                for (sector = 0; sector < _SectorCount; ++sector) {
+                    m[sector].rgb /= m[sector].w;
+                    s[sector] = abs(s[sector] / m[sector].w - m[sector].rgb * m[sector].rgb);
 
-                    float sigma2 = s[quardrant].r + s[quardrant].g + s[quardrant].b;
+                    float sigma2 = s[sector].r + s[sector].g + s[sector].b;
                     float w = 1.0f / (1.0f + pow(_Hardness * 1000.0f * sigma2, 0.5f * _Sharpness));
 
-                    output += float4(m[quardrant].rgb * w, w);
+                    output += float4(m[sector].rgb * w, w);
                 }
 
                 return saturate(output / output.w);
