@@ -233,12 +233,12 @@ Shader "CustomRenderTexture/Anisotropic_Kuwahara" {
 
                             vxx = zeta - eta * v.x * v.x; // for sectors pointing up and down
                             vyy = zeta - eta * v.y * v.y; // for sectors pointing left and right
-                            current_weight = max(0, v.y + v.xx); // weight positive when pixel inside leaf / weight curve
 
+                            current_weight = max(0, v.y + vxx); // weight positive when pixel inside leaf / weight curve
                             sector_weights[0] = current_weight * current_weight; // top quardrant of kernel
                             sum += sector_weights[0];
 
-                            current_weight = max(0, -v.x + v.yy); // left quardrant of kernel
+                            current_weight = max(0, -v.x + vyy); // left quardrant of kernel
                             sector_weights[2] = current_weight * current_weight;
                             sum += sector_weights[2];
 
