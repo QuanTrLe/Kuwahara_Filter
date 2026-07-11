@@ -6,7 +6,10 @@ This project includes different versions of the Kuwahara Filter that I am implem
 Currently, the versions implemented are mainly for studying and visual inspecting, not for production due to the performance of the filter itself. This video was heavily inspired and done based off the knowledge I got from [Acerola's video](https://www.youtube.com/watch?v=LDhN-JK3U9g&t=867s) and the paper released on the topic, which has been linked in the acknowledgements section.
 
 ## Filter Ouputs
-Including the base image, the basic version, the optimized generalized version, and the anisotropic version
+
+![alt text][filter_output_1]
+
+![alt text][filter_output_2]
 
 ## Overview of Workings
 ### Basic Kuwahara Filter
@@ -56,3 +59,5 @@ TO do this, the filter uses 4 passes in total compared to the earleir versions, 
 [basic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Basic_kuwahara_filter_output.png "Basic Kuwahara Filter Output"
 [generalized_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kuwahara_filter_output.png "Generalized Kuwahara Filter Output"
 [anisotropic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Anisotropic_kuwahara_filter_output.png "Anisotropic Kuwahara Filter Output"
+[filter_output_1]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Filter_output_1.png "Filter Outputs: Green Knight"
+[filter_output_2]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Filter_output_2.png "Filter Outputs: Squirrel"
