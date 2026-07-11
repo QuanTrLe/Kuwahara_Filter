@@ -32,7 +32,9 @@ Another issue is that while the stylization is definitely an improvement compare
 ![alt text][generalized_filter_output]
 
 ### Anisotropic Kuwahara Filter
-Workings of the anisotropic Kuwahara filter
+The anisotropic version introduced in the paper by Jurgen Dollner is meant to fix not only the performance issue of the generalized version, but also to improve the stylization issues that the generalized version still has left when it comes to finer angles and details. To do this, this version of the filter once again focuses on the improvement of the kernel shape, or more concisely how to manipulate it. This version of the filter uses the circular kernel with 8 sectors that the generalized version did, but it also introduced the ability to morph the kernel into an elliptical shape based on the structure tensor, allowing the filter to be able to adapt to details along the lines better.
+
+![alt text][anisotropic_kernel]
 
 ## Acknowledgements
 1. [This is the Kuwahara Filter - Acerola](https://www.youtube.com/watch?v=LDhN-JK3U9g&t=867s)
@@ -45,6 +47,7 @@ Workings of the anisotropic Kuwahara filter
 
 [kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "Basic Kuwahara Filter Kernel: From [7]"
 [generalized_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kernel.png "Generalized Kuwahara Filter Kernel: From [2]"
+[anisotropic_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Anisotropic_kernel.png "Anisotropic Kuwahara Filter Kernel: From [2]"
 [polynomial_approx_weighting]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Polynomial_approx_weighting.png "Polynomial Weighting Approximation: From [3]"
 [basic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Basic_kuwahara_filter_output.png "Basic Kuwahara Filter Output"
 [generalized_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kuwahara_filter_output.png "Generalized Kuwahara Filter Output"
