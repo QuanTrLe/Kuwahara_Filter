@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &40705256
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -560,7 +560,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ae09c80363205740964edb0bad09656, type: 3}
   m_Name: 
@@ -580,13 +580,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ecc45aa0e2fa2d941adc2c782af2621b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   kuwaharaShader: {fileID: 4800000, guid: 52eef89b6a2d70b4d8c314bcd46ce1ff, type: 3}
-  kernelSize: 10
+  kernelSize: 15
   sharpness: 8
   hardness: 8
   alpha: 1
@@ -778,7 +778,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!212 &2120425919
 SpriteRenderer:
   m_ObjectHideFlags: 0
