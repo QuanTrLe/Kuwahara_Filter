@@ -529,7 +529,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   kuwaharaShader: {fileID: 4800000, guid: 9cef6cfe3b6af914aa724bad6ca4cde4, type: 3}
-  kernelSize: 4
+  kernelSize: 10
   animateKernelSize: 0
   minKernelSize: 1
   sizeAnimationSpeed: 0.1
@@ -586,7 +586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   kuwaharaShader: {fileID: 4800000, guid: 52eef89b6a2d70b4d8c314bcd46ce1ff, type: 3}
-  kernelSize: 15
+  kernelSize: 10
   sharpness: 8
   hardness: 8
   alpha: 1
