@@ -43,6 +43,13 @@ TO do this, the filter uses 4 passes in total compared to the earleir versions, 
 
 ![alt text][anisotropic_filter_output]
 
+### Reflection and Improvements
+I had a great time doing this project overall, despite how long it took me. This was my first and biggest exposure to shader programming and applying mathematics in programming like this. It was really confusing at times because a lot of these, especially the polynomial weighting approximation and the elliptical stretching of the kernels were something that I understood vaguely but didn't have an idea on how to actually implement it in the code base. Still, it was a lot of fun seeing how the math and the code shapes the filters' outputs and how it directly takes place in a more concrete context.
+
+That said though, since this was my first time programming such a project, I was only able to really program by myself the basic version and the generalized version of the filter that uses gaussian weighting. The optimized version of the generalized filter I had to heavily rely on Acerola's code, just to even understand by going through each line after copying it from him. The anisotropic filter also came through a bit of the same fate, even though I was able to fill in more of the gaps by myself more. Another thing that could be improved is also the current state of the optimized general version which uses the polynomial weighting. It's supposed to simulate the version that uses the gaussian weighting, but mine is probably having a hiccup somewhere that it couldn't spot. However at its current state it looks like amuch lighter version of the generalized one and even with 2 pases, it doesn't simulate the look fully well. 
+
+![alt text][optimized_generalized_filter_output]
+
 ## Acknowledgements
 1. [This is the Kuwahara Filter - Acerola](https://www.youtube.com/watch?v=LDhN-JK3U9g&t=867s)
 2. [Image and Video Abstraction by Anisotropic Kuwahara Filtering](https://www.researchgate.net/publication/220507613_Image_and_Video_Abstraction_by_Anisotropic_Kuwahara_Filtering)
@@ -51,6 +58,7 @@ TO do this, the filter uses 4 passes in total compared to the earleir versions, 
 5. [Gaussian Weight and Smoothing](https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm)
 6. [Kuwahara Filter Wikipedia](https://en.wikipedia.org/wiki/Kuwahara_filter) 
 7. [Ellipse Wikipedia](https://en.wikipedia.org/wiki/Ellipse)
+8. Brian Chen - My university's graphics programming professor who I bugged for a whole semester =D
 
 [kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "Basic Kuwahara Filter Kernel: From [7]"
 [generalized_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kernel.png "Generalized Kuwahara Filter Kernel: From [2]"
@@ -58,6 +66,7 @@ TO do this, the filter uses 4 passes in total compared to the earleir versions, 
 [polynomial_approx_weighting]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Polynomial_approx_weighting.png "Polynomial Weighting Approximation: From [3]"
 [basic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Basic_kuwahara_filter_output.png "Basic Kuwahara Filter Output"
 [generalized_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kuwahara_filter_output.png "Generalized Kuwahara Filter Output"
+[optimized_generalized_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Optimized_generalized_kuwahara_filter_output.png "Optimized Generalized Kuwahara Filter Output"
 [anisotropic_filter_output]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Anisotropic_kuwahara_filter_output.png "Anisotropic Kuwahara Filter Output"
 [filter_output_1]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Filter_output_1.png "Filter Outputs: Green Knight"
 [filter_output_2]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Filter_output_2.png "Filter Outputs: Squirrel"
