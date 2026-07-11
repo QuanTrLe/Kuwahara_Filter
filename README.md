@@ -36,6 +36,8 @@ The anisotropic version introduced in the paper by Jurgen Dollner is meant to fi
 
 ![alt text][anisotropic_kernel]
 
+TO do this, the filter uses 4 passes in total compared to the earleir versions, which only had 1. The first pass is meant to get the structure tensor of the image by applying vertical and horizontal sobel operators to calculate the eigenvectors. The information is then passed along to pass number 2 and 3, which applies horizontal and vertical bluring to smooth out the information and make the flow more continuous. In pass 3 the filter also calculates eigenvalues and eigenvectors pointing in the direction of minimal change of the pixel, along with the anisotropy of the region, which ranges from 0 (the region is isotropic) to 1 (the region is anisotropic). After which, pass 4 uses the information gained to make matrices controlling the direction of the kernel stretching and the major / minor axes of the ellipse. The base of the math afterwards is similar to that of the optimized generalized version however since it uses polynomial weighting and the kernel is still circular with 8 sectors.   
+
 ## Acknowledgements
 1. [This is the Kuwahara Filter - Acerola](https://www.youtube.com/watch?v=LDhN-JK3U9g&t=867s)
 2. [Image and Video Abstraction by Anisotropic Kuwahara Filtering](https://www.researchgate.net/publication/220507613_Image_and_Video_Abstraction_by_Anisotropic_Kuwahara_Filtering)
