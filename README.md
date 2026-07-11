@@ -58,7 +58,7 @@ That said though, since this was my first time programming such a project, I was
 5. [Gaussian Weight and Smoothing](https://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm)
 6. [Kuwahara Filter Wikipedia](https://en.wikipedia.org/wiki/Kuwahara_filter) 
 7. [Ellipse Wikipedia](https://en.wikipedia.org/wiki/Ellipse)
-8. Brian Chen - My university's graphics programming professor who I bugged for a whole semester =D
+8. Brian Chen - My university's graphics programming professor who I kept annoying for a whole semester =D
 
 [kuwahara_basic_filter_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Kuwahara_square_kernel.jpg "Basic Kuwahara Filter Kernel: From [7]"
 [generalized_kernel]: https://github.com/QuanTrLe/Kuwahara_Filter/blob/main/Images/Generalized_kernel.png "Generalized Kuwahara Filter Kernel: From [2]"
